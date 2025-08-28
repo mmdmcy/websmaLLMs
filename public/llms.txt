@@ -1,0 +1,13 @@
+# llms.txt — AI/LLM crawler profile for websmallms.com
+# Key routes and pointers to assist discovery.
+
+Site: https://websmallms.com/
+Docs: https://websmallms.com/
+Sitemap: https://websmallms.com/sitemap_index.xml
+Sitemap: https://www.websmallms.com/sitemap_index.xml
+
+# Public content highlights
+Route: /
+Description: Home — Small LLM benchmarking results and visualizations.
+
+# Robots: Allowed for AI bots (see robots.txt)

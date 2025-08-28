@@ -1,0 +1,32 @@
+# robots.txt for websmallms.com
+# Allow all by default; disallow sensitive/auth routes; explicitly allow major AI bots.
+
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /auth
+Disallow: /account
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /change-email
+Disallow: /success
+Disallow: /goodbye
+
+# Explicit AI bot allowance
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: AndiBot
+Allow: /
+
+User-agent: ExaBot
+Allow: /
+
+Sitemap: https://websmallms.com/sitemap.xml
+Sitemap: https://www.websmallms.com/sitemap.xml
