@@ -1,30 +1,39 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import benchmarkData from '../data/benchmark-results.json';
 
-const ModelPerformance: React.FC<{ model_analysis: any }> = ({ model_analysis }) => {
+const ModelPerformance: React.FC<{ model_analysis?: any }> = ({ model_analysis }) => {
+  // fallback to bundled benchmark data when prop not provided (prevents runtime errors)
+  const safeModelAnalysis = model_analysis ?? benchmarkData.model_analysis ?? {};
   const [activeChart, setActiveChart] = useState<'accuracy' | 'latency'>('accuracy');
 
-  const chartData = Object.entries(model_analysis).map(([model, data]: [string, any]) => ({
+  const chartData = Object.entries(safeModelAnalysis).map(([model, data]: [string, any]) => ({
     model: model.split('/')[1] || model.substring(0, 15),
     fullModel: model,
-    accuracy: Math.round(data.avg_accuracy * 100),
-    latency: Math.round(data.avg_latency),
-    cost: data.total_cost,
-    valueScore: data.value_score
+    accuracy: Number.isFinite(data?.avg_accuracy) ? Math.round(data.avg_accuracy * 100) : 0,
+    latency: Number.isFinite(data?.avg_latency) ? Math.round(data.avg_latency) : 0,
+    cost: Number.isFinite(data?.total_cost) ? data.total_cost : 0,
+    valueScore: Number.isFinite(data?.value_score) ? data.value_score : 0
   }));
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label: _label }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload;
+      const data = payload[0].payload || {};
+      const cost = Number.isFinite(data.cost) ? data.cost : null;
+      const valueScore = Number.isFinite(data.valueScore) ? data.valueScore : null;
       return (
         <div className="bg-black border border-green-400 p-3 text-green-400 text-sm">
           <p className="text-cyan-400 font-bold mb-2">{data.fullModel}</p>
           <div className="space-y-1">
-            <p>Accuracy: <span className="text-yellow-400">{data.accuracy}%</span></p>
-            <p>Latency: <span className="text-purple-400">{data.latency}ms</span></p>
-            <p>Cost: <span className="text-green-400">${data.cost.toFixed(4)}</span></p>
-            <p>Value Score: <span className="text-cyan-400">{data.valueScore.toFixed(2)}</span></p>
+            <p>Accuracy: <span className="text-yellow-400">{data.accuracy ?? 0}%</span></p>
+            <p>Latency: <span className="text-purple-400">{data.latency ?? 0}ms</span></p>
+            {cost !== null ? (
+              <p>Cost: <span className="text-green-400">${cost.toFixed(4)}</span></p>
+            ) : null}
+            {valueScore !== null ? (
+              <p>Value Score: <span className="text-cyan-400">{valueScore.toFixed(2)}</span></p>
+            ) : null}
           </div>
         </div>
       );

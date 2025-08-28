@@ -22,20 +22,23 @@ const TerminalDashboard: React.FC = () => {
     return () => clearTimeout(typeTimer);
   }, [typedText, fullText]);
 
-  const { execution_summary, model_analysis, rankings, cost_breakdown } = benchmarkData;
+  const { execution_summary, model_analysis, rankings, cost_breakdown } = benchmarkData || {};
+  const safeModelAnalysis = model_analysis ?? {};
+  const safeCostBreakdown = cost_breakdown ?? {};
+  const safeExecutionSummary = execution_summary ?? { total_cost: 0, total_time_minutes: 0, timestamp: new Date().toISOString(), total_evaluations: 0, avg_cost_per_eval: 0, cost_per_minute: 0 };
 
-  // Prepare chart data
-  const accuracyData = Object.entries(model_analysis).map(([model, data]) => ({
-    model: model.split('/')[1]?.substring(0, 12) || model.substring(0, 12),
-    accuracy: (data.avg_accuracy * 100).toFixed(1),
-    cost: data.total_cost,
-    latency: data.avg_latency.toFixed(0)
+  // Prepare chart data (use type casts and safe fallbacks)
+  const accuracyData = (Object.entries(safeModelAnalysis) as [string, any][]).map(([model, data]) => ({
+    model: String(model).split('/')[1]?.substring(0, 12) || String(model).substring(0, 12),
+    accuracy: Number.isFinite(data?.avg_accuracy) ? (data.avg_accuracy * 100).toFixed(1) : '0.0',
+    cost: Number.isFinite(data?.total_cost) ? data.total_cost : 0,
+    latency: Number.isFinite(data?.avg_latency) ? String(Math.round(data.avg_latency)) : '0'
   }));
 
-  const costData = Object.entries(cost_breakdown).map(([model, cost]) => ({
-    name: model.split('/')[1]?.substring(0, 10) || model.substring(0, 10),
-    value: cost,
-    percentage: ((cost / execution_summary.total_cost) * 100).toFixed(1)
+  const costData = (Object.entries(safeCostBreakdown) as [string, any][]).map(([model, cost]) => ({
+    name: String(model).split('/')[1]?.substring(0, 10) || String(model).substring(0, 10),
+    value: Number.isFinite(cost) ? cost : 0,
+    percentage: Number.isFinite(cost) && Number.isFinite(safeExecutionSummary.total_cost) && safeExecutionSummary.total_cost > 0 ? ((cost / safeExecutionSummary.total_cost) * 100).toFixed(1) : '0.0'
   }));
 
   const COLORS = ['#00ff00', '#00ffff', '#ffff00', '#ff00ff', '#ff8000'];
@@ -103,23 +106,23 @@ const TerminalDashboard: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <div className="text-gray-400">TOTAL_EVALS:</div>
-                <div className="text-green-400 font-bold text-lg">{execution_summary.total_evaluations}</div>
+                  <div className="text-green-400 font-bold text-lg">{safeExecutionSummary.total_evaluations}</div>
               </div>
               <div>
                 <div className="text-gray-400">TOTAL_COST:</div>
-                <div className="text-yellow-400 font-bold text-lg">${execution_summary.total_cost.toFixed(4)}</div>
+                  <div className="text-yellow-400 font-bold text-lg">${Number.isFinite(safeExecutionSummary.total_cost) ? safeExecutionSummary.total_cost.toFixed(4) : '0.0000'}</div>
               </div>
               <div>
                 <div className="text-gray-400">EXEC_TIME:</div>
-                <div className="text-cyan-400 font-bold text-lg">{execution_summary.total_time_minutes.toFixed(1)}m</div>
+                  <div className="text-cyan-400 font-bold text-lg">{Number.isFinite(safeExecutionSummary.total_time_minutes) ? safeExecutionSummary.total_time_minutes.toFixed(1) : '0.0'}m</div>
               </div>
               <div>
                 <div className="text-gray-400">AVG_COST:</div>
-                <div className="text-magenta-400 font-bold text-lg">${execution_summary.avg_cost_per_eval.toFixed(4)}</div>
+                  <div className="text-magenta-400 font-bold text-lg">${Number.isFinite(safeExecutionSummary.avg_cost_per_eval) ? safeExecutionSummary.avg_cost_per_eval.toFixed(4) : '0.0000'}</div>
               </div>
             </div>
             <div className="mt-4 text-xs">
-              <div className="text-gray-400">TIMESTAMP: {new Date(execution_summary.timestamp).toLocaleString()}</div>
+                <div className="text-gray-400">TIMESTAMP: {new Date(safeExecutionSummary.timestamp).toLocaleString()}</div>
               <div className="text-green-400">STATUS: ✓ COMPLETED</div>
             </div>
           </div>
@@ -131,8 +134,10 @@ const TerminalDashboard: React.FC = () => {
               PERFORMANCE_RANKINGS
             </div>
             <div className="space-y-2 text-sm">
-              {rankings.performance.slice(0, 3).map(([model, data], index) => (
-                <div key={model} className="flex items-center justify-between border-b border-gray-700 pb-2">
+      {(rankings?.performance ?? []).slice(0, 3).map((entry: any, index: number) => {
+        const [model, data] = entry as [any, any];
+        return (
+    <div key={String(model)} className="flex items-center justify-between border-b border-gray-700 pb-2">
                   <div className="flex items-center space-x-2">
                     <span className={`w-6 h-6 flex items-center justify-center rounded text-xs font-bold ${
                       index === 0 ? 'bg-yellow-400 text-black' : 
@@ -141,20 +146,21 @@ const TerminalDashboard: React.FC = () => {
                       {index + 1}
                     </span>
                     <span className="text-green-400 truncate w-24">
-                      {model.split('/')[1]?.substring(0, 12) || model.substring(0, 12)}
+          {String(model).split('/')[1]?.substring(0, 12) || String(model).substring(0, 12)}
                     </span>
                   </div>
                   <div className="text-right">
-                    <div className="text-cyan-400 font-bold">{(data.avg_accuracy * 100).toFixed(1)}%</div>
-                    <div className="text-gray-400 text-xs">${data.total_cost.toFixed(3)}</div>
+                    <div className="text-cyan-400 font-bold">{Number.isFinite((data as any)?.avg_accuracy) ? ((data as any).avg_accuracy * 100).toFixed(1) : '0.0'}%</div>
+                    <div className="text-gray-400 text-xs">${Number.isFinite((data as any)?.total_cost) ? (data as any).total_cost.toFixed(3) : '0.000'}</div>
                   </div>
                 </div>
-              ))}
+              );
+      })}
             </div>
             
             <div className="mt-4 text-xs">
-              <div className="text-yellow-400">BEST_PERFORMER: {rankings.performance[0][0].split('/')[1]}</div>
-              <div className="text-green-400">COST_LEADER: {rankings.cost_efficiency[0][0].split('/')[1]}</div>
+              <div className="text-yellow-400">BEST_PERFORMER: {String((rankings?.performance?.[0]?.[0]) ?? '').split('/')[1] ?? ''}</div>
+              <div className="text-green-400">COST_LEADER: {String((rankings?.cost_efficiency?.[0]?.[0]) ?? '').split('/')[1] ?? ''}</div>
             </div>
           </div>
         </div>
@@ -202,9 +208,9 @@ const TerminalDashboard: React.FC = () => {
                       outerRadius={50}
                       dataKey="value"
                     >
-                      {costData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
+                      {costData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
@@ -252,7 +258,7 @@ const TerminalDashboard: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">MODELS:</span>
-                <span className="text-cyan-400">{Object.keys(model_analysis).length} LOADED</span>
+                <span className="text-cyan-400">{Object.keys(safeModelAnalysis).length} LOADED</span>
               </div>
             </div>
           </div>
@@ -264,32 +270,35 @@ const TerminalDashboard: React.FC = () => {
               MODEL_METRICS
             </div>
             <div className="space-y-3 text-xs">
-              {Object.entries(model_analysis).map(([model, data]) => (
-                <div key={model} className="border-b border-gray-700 pb-2">
-                  <div className="text-green-400 font-bold mb-1 truncate">
-                    {model.split('/')[1] || model}
+                    {(Object.entries(safeModelAnalysis) as [string, any][]).map((entry) => {
+                      const [model, data] = entry as [string, any];
+                      return (
+                      <div key={String(model)} className="border-b border-gray-700 pb-2">
+                        <div className="text-green-400 font-bold mb-1 truncate">
+                          {String(model).split('/')[1] || String(model)}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-gray-400">ACC:</span>
+                            <span className="text-cyan-400 ml-1">{Number.isFinite((data as any)?.avg_accuracy) ? ((data as any).avg_accuracy * 100).toFixed(1) : '0.0'}%</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">LAT:</span>
+                            <span className="text-yellow-400 ml-1">{Number.isFinite((data as any)?.avg_latency) ? Math.round((data as any).avg_latency) : 0}ms</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">COST:</span>
+                            <span className="text-green-400 ml-1">${Number.isFinite((data as any)?.total_cost) ? (data as any).total_cost.toFixed(3) : '0.000'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">VAL:</span>
+                            <span className="text-magenta-400 ml-1">{Number.isFinite((data as any)?.value_score) ? (data as any).value_score.toFixed(2) : '0.00'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      );
+                    })}
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-gray-400">ACC:</span>
-                      <span className="text-cyan-400 ml-1">{(data.avg_accuracy * 100).toFixed(1)}%</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">LAT:</span>
-                      <span className="text-yellow-400 ml-1">{data.avg_latency.toFixed(0)}ms</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">COST:</span>
-                      <span className="text-green-400 ml-1">${data.total_cost.toFixed(3)}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">VAL:</span>
-                      <span className="text-magenta-400 ml-1">{data.value_score.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

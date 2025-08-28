@@ -5,21 +5,24 @@ import benchmarkData from '../data/benchmark-results.json';
 
 const CostAnalysis: React.FC = () => {
   const [activeView, setActiveView] = useState<'pie' | 'bar'>('pie');
-  const { cost_breakdown, model_analysis } = benchmarkData;
+  const { cost_breakdown, model_analysis, execution_summary } = benchmarkData || {};
+  const safeCostBreakdown = cost_breakdown ?? {};
+  const safeModelAnalysis = model_analysis ?? {};
+  const safeExecutionSummary = execution_summary ?? { total_cost: 0, cost_per_minute: 0 };
 
-  const costData = Object.entries(cost_breakdown).map(([model, cost]) => ({
-    name: model.split('/')[1] || model.substring(0, 15),
-    fullName: model,
-    value: cost,
-    percentage: ((cost / benchmarkData.execution_summary.total_cost) * 100).toFixed(1)
+  const costData = (Object.entries(safeCostBreakdown) as [string, any][]).map(([model, cost]) => ({
+    name: String(model).split('/')[1] || String(model).substring(0, 15),
+    fullName: String(model),
+    value: Number.isFinite(cost) ? cost : 0,
+    percentage: Number.isFinite(cost) && Number.isFinite(safeExecutionSummary.total_cost) && safeExecutionSummary.total_cost > 0 ? ((cost / safeExecutionSummary.total_cost) * 100).toFixed(1) : '0.0'
   }));
 
-  const valueData = Object.entries(model_analysis).map(([model, data]) => ({
-    model: model.split('/')[1] || model.substring(0, 15),
-    fullModel: model,
-    valueScore: data.value_score,
-    cost: data.total_cost,
-    accuracy: data.avg_accuracy * 100
+  const valueData = (Object.entries(safeModelAnalysis) as [string, any][]).map(([model, data]) => ({
+    model: String(model).split('/')[1] || String(model).substring(0, 15),
+    fullModel: String(model),
+    valueScore: Number.isFinite((data as any)?.value_score) ? (data as any).value_score : 0,
+    cost: Number.isFinite((data as any)?.total_cost) ? (data as any).total_cost : 0,
+    accuracy: Number.isFinite((data as any)?.avg_accuracy) ? (data as any).avg_accuracy * 100 : 0
   }));
 
   const COLORS = ['#10b981', '#06b6d4', '#fbbf24', '#f472b6', '#8b5cf6'];
@@ -95,7 +98,7 @@ const CostAnalysis: React.FC = () => {
                   label={({ name, percentage }) => `${name}: ${percentage}%`}
                   labelLine={false}
                 >
-                  {costData.map((entry, index) => (
+                  {costData.map((_entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -131,31 +134,31 @@ const CostAnalysis: React.FC = () => {
           <div className="border border-gray-600 bg-black p-4">
             <h3 className="text-cyan-400 font-bold mb-3">COST_BREAKDOWN</h3>
             <div className="space-y-2">
-              {costData.map((item, index) => (
-                <div key={item.name} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                    />
+                      {costData.map((item: any, _index: number) => (
+                        <div key={item.name} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center space-x-2">
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: COLORS[_index % COLORS.length] }}
+                            />
                     <span className="text-green-400 truncate">{item.name}</span>
                   </div>
-                  <span className="text-yellow-400">${item.value.toFixed(4)}</span>
+                  <span className="text-yellow-400">${Number.isFinite(item.value) ? item.value.toFixed(4) : '0.0000'}</span>
                 </div>
-              ))}
+                      ))}
             </div>
           </div>
 
           <div className="border border-gray-600 bg-black p-4">
             <h3 className="text-cyan-400 font-bold mb-3">EFFICIENCY_METRICS</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
+                <div className="flex justify-between">
                 <span className="text-gray-400">Cost/Minute:</span>
-                <span className="text-yellow-400">${benchmarkData.execution_summary.cost_per_minute.toFixed(4)}</span>
+                <span className="text-yellow-400">${Number.isFinite(safeExecutionSummary.cost_per_minute) ? safeExecutionSummary.cost_per_minute.toFixed(4) : '0.0000'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Total Models:</span>
-                <span className="text-green-400">{Object.keys(model_analysis).length}</span>
+                <span className="text-green-400">{Object.keys(safeModelAnalysis).length}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Success Rate:</span>

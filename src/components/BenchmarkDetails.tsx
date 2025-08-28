@@ -5,7 +5,9 @@ import benchmarkData from '../data/benchmark-results.json';
 const BenchmarkDetails: React.FC = () => {
   const [sortBy, setSortBy] = useState<'accuracy' | 'cost' | 'latency' | 'value'>('accuracy');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const { model_analysis, rankings } = benchmarkData;
+  const { model_analysis, rankings } = benchmarkData || {};
+  const safeModelAnalysis = model_analysis ?? {};
+  const safeRankings = rankings ?? { performance: [], cost_efficiency: [] };
 
   const handleSort = (column: 'accuracy' | 'cost' | 'latency' | 'value') => {
     if (sortBy === column) {
@@ -16,7 +18,7 @@ const BenchmarkDetails: React.FC = () => {
     }
   };
 
-  const sortedData = Object.entries(model_analysis).sort(([, a], [, b]) => {
+  const sortedData = (Object.entries(safeModelAnalysis) as [string, any][]).sort(([, a], [, b]) => {
     let valueA: number, valueB: number;
     
     switch (sortBy) {
@@ -62,8 +64,10 @@ const BenchmarkDetails: React.FC = () => {
         <div className="border border-gray-600 bg-black p-4">
           <h3 className="text-cyan-400 font-bold mb-4">PERFORMANCE_RANKINGS</h3>
           <div className="space-y-3">
-            {rankings.performance.slice(0, 3).map(([model, data], index) => (
-              <div key={model} className="flex items-center justify-between border-b border-gray-700 pb-2">
+            {(safeRankings.performance ?? []).slice(0, 3).map((entry: any, index: number) => {
+              const [model, data] = entry as [any, any];
+              return (
+              <div key={String(model)} className="flex items-center justify-between border-b border-gray-700 pb-2">
                 <div className="flex items-center space-x-3">
                   <span className={`w-6 h-6 flex items-center justify-center rounded text-xs font-bold ${
                     index === 0 ? 'bg-yellow-400 text-black' : 
@@ -72,15 +76,16 @@ const BenchmarkDetails: React.FC = () => {
                     {index + 1}
                   </span>
                   <span className="text-green-400 text-sm">
-                    {model.split('/')[1] || model.substring(0, 20)}
+                    {String(model).split('/')[1] || String(model).substring(0, 20)}
                   </span>
                 </div>
                 <div className="text-right text-sm">
-                  <div className="text-cyan-400 font-bold">{(data.avg_accuracy * 100).toFixed(1)}%</div>
-                  <div className="text-gray-400 text-xs">${data.total_cost.toFixed(4)}</div>
+                  <div className="text-cyan-400 font-bold">{Number.isFinite((data as any)?.avg_accuracy) ? ((data as any).avg_accuracy * 100).toFixed(1) : '0.0'}%</div>
+                  <div className="text-gray-400 text-xs">${Number.isFinite((data as any)?.total_cost) ? (data as any).total_cost.toFixed(4) : '0.0000'}</div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
 
@@ -88,8 +93,10 @@ const BenchmarkDetails: React.FC = () => {
         <div className="border border-gray-600 bg-black p-4">
           <h3 className="text-cyan-400 font-bold mb-4">COST_EFFICIENCY</h3>
           <div className="space-y-3">
-            {rankings.cost_efficiency.slice(0, 3).map(([model, data], index) => (
-              <div key={model} className="flex items-center justify-between border-b border-gray-700 pb-2">
+            {(safeRankings.cost_efficiency ?? []).slice(0, 3).map((entry: any, index: number) => {
+              const [model, data] = entry as [any, any];
+              return (
+              <div key={String(model)} className="flex items-center justify-between border-b border-gray-700 pb-2">
                 <div className="flex items-center space-x-3">
                   <span className={`w-6 h-6 flex items-center justify-center rounded text-xs font-bold ${
                     index === 0 ? 'bg-green-400 text-black' : 
@@ -98,15 +105,16 @@ const BenchmarkDetails: React.FC = () => {
                     {index + 1}
                   </span>
                   <span className="text-green-400 text-sm">
-                    {model.split('/')[1] || model.substring(0, 20)}
+                    {String(model).split('/')[1] || String(model).substring(0, 20)}
                   </span>
                 </div>
                 <div className="text-right text-sm">
-                  <div className="text-yellow-400 font-bold">${data.total_cost.toFixed(4)}</div>
-                  <div className="text-gray-400 text-xs">Score: {data.value_score.toFixed(2)}</div>
+                  <div className="text-yellow-400 font-bold">${Number.isFinite((data as any)?.total_cost) ? (data as any).total_cost.toFixed(4) : '0.0000'}</div>
+                  <div className="text-gray-400 text-xs">Score: {Number.isFinite((data as any)?.value_score) ? (data as any).value_score.toFixed(2) : '0.00'}</div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       </div>
