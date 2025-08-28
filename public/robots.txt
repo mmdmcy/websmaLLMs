@@ -1,4 +1,4 @@
-# robots.txt for websmallms.com
+# robots.txt for smallms.com
 # Allow all by default; disallow sensitive/auth routes; explicitly allow major AI bots.
 
 User-agent: *
@@ -28,5 +28,5 @@ Allow: /
 User-agent: ExaBot
 Allow: /
 
-Sitemap: https://websmallms.com/sitemap.xml
-Sitemap: https://www.websmallms.com/sitemap.xml
+Sitemap: https://smallms.com/sitemap.xml
+Sitemap: https://www.smallms.com/sitemap.xml

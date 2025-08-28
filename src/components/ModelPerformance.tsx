@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
-import { TrendingUp, Zap } from 'lucide-react';
-import benchmarkData from '../data/benchmark-results.json';
+import { TrendingUp } from 'lucide-react';
 
-const ModelPerformance: React.FC = () => {
+const ModelPerformance: React.FC<{ model_analysis: any }> = ({ model_analysis }) => {
   const [activeChart, setActiveChart] = useState<'accuracy' | 'latency'>('accuracy');
-  const { model_analysis } = benchmarkData;
 
-  const chartData = Object.entries(model_analysis).map(([model, data]) => ({
+  const chartData = Object.entries(model_analysis).map(([model, data]: [string, any]) => ({
     model: model.split('/')[1] || model.substring(0, 15),
     fullModel: model,
     accuracy: Math.round(data.avg_accuracy * 100),
