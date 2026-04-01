@@ -8,27 +8,38 @@ Production notes for SEO and LLM discoverability:
 - Update `<lastmod>` in sitemaps when content changes.
 - Keep canonical URLs at apex domain without trailing slash.
 
-## 🛠️ Technical Architecture & Strategy
+## Session workflow
 
-This project is engineered as a high-performance, interactive dashboard for visualizing LLM benchmark data, complying with modern web standards and SEO best practices.
+This site now consumes the exported benchmark session bundle from `smaLLMs`.
 
-### 1. Core Technology Stack
-- **Framework & Runtime:** Built with **React 18** and **TypeScript** to ensure type safety, component modularity, and maintainable application logic.
-- **Build System:** powered by **Vite** for optimized production builds, hot module replacement (HMR), and superior developer experience.
-- **Styling Engine:** utilized **Tailwind CSS** for a utility-first, responsive design system that ensures consistent theming and minimal bundle size.
+Primary file:
 
-### 2. Specialized Components
-- **Data Visualization:** Integrated **Recharts** to render complex performance metrics (latency, cost, accuracy) into interactive, responsive graphs.
-- **UI Animation:** Implemented **Framer Motion** for fluid state transitions and enhanced user engagement without compromising performance.
-- **Iconography:** Used **Lucide React** for lightweight, consistent SVG icons.
+- `public/data/latest-session.json`
 
-### 3. Application Architecture
-- **Data-Driven Design:** The application architecture decouples the visualization layer from the data layer. Benchmark results (`full_evaluation_report.json`) are ingested as static JSON, allowing for near-instant rendering without the latency of runtime database queries.
-- **SEO & AI Discoverability:**
-    - **`llms.txt`**: Implemented the proposed standard for allowing Large Language Models to traverse and understand the repository content efficiently.
-    - **Sitemap Strategy**: Standardized `sitemap.xml` and `robots.txt` configuration for optimal search engine indexing.
-- **Component Modularity:** The UI is decomposed into small, functional units (`TerminalDashboard`, `ModelPerformance`, `CostAnalysis`) to promote code reusability and isolated testing.
+The benchmark repo can mirror that file automatically when it exports a run:
 
-### 4. Deployment & Hosting
-- **Edge Compatibility:** The static-first architecture makes this application compatible with edge networks (Vercel/Cloudflare/Netlify) for global low-latency delivery.
-- **Security:** Zero-backend dependency for read-only views minimizes the attack surface, relying purely on client-side rendering of pre-validated data.
+- `../smaLLMs/website_exports/latest/session.json`
+- mirrored to `public/data/latest-session.json`
+
+The UI supports two data paths:
+
+- auto-load the mirrored `public/data/latest-session.json`
+- manually import any exported `session.json` from the toolbar
+
+## What the site renders
+
+The session bundle is intentionally dense. The site reads and displays:
+
+- run metadata and reproducibility info
+- leaderboard rows across all models
+- per-benchmark coverage and metric matrix
+- per-evaluation metrics and artifact paths
+- sample-level prompt, response, parsed answer, correctness, latency, tokens, and raw provider metadata
+
+## Stack
+
+- React 18 + TypeScript
+- Vite
+- Recharts for charts
+- Lucide React for icons
+- CSS-first terminal styling with a static JSON data source
