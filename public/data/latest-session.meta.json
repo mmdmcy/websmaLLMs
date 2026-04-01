@@ -1,7 +1,7 @@
 {
   "schema_version": "3.0",
   "run_id": "run_20260326_230331464210+0000",
-  "updated_at": "2026-04-01T20:49:31.582053+00:00",
+  "updated_at": "2026-04-01T21:02:04.872242+00:00",
   "totals": {
     "models": 1,
     "benchmarks": 2,
@@ -13,6 +13,18 @@
     "accuracy": 0.0,
     "errors": 0,
     "total_tokens": 526,
-    "total_duration_sec": 8.6635
+    "total_duration_sec": 8.6635,
+    "success": 2,
+    "success_rate": 1.0,
+    "responded": 2,
+    "response_rate": 1.0,
+    "total_prompt_tokens": 522,
+    "total_completion_tokens": 4,
+    "avg_latency_sec": 4.3317,
+    "avg_load_duration_sec": 2.4394,
+    "avg_prompt_eval_duration_sec": 1.5759,
+    "avg_eval_duration_sec": 0.0197,
+    "total_prompt_chars": 2175,
+    "total_response_chars": 4
   }
 }

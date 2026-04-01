@@ -61,6 +61,10 @@ const SAMPLE_BASE_FIELDS = new Set([
   "completion_tokens",
   "total_tokens",
   "tokens_per_second",
+  "prompt_chars",
+  "response_chars",
+  "expected_answer_chars",
+  "parsed_prediction_chars",
   "raw_provider_metrics",
 ]);
 
@@ -276,6 +280,7 @@ function App() {
             onLoadMore={() => setVisibleSamples((count) => count + SAMPLE_PAGE_SIZE)}
           />
           <EnvironmentPanel session={session} />
+          <DataArchivePanel session={session} />
         </>
       ) : null}
     </div>
@@ -333,6 +338,8 @@ function OverviewPanel({ session, sourceLabel }: { session: BenchmarkSession; so
           <StatCard icon={<Gauge size={18} />} label="Evaluations" value={formatNumber(totals.evaluations)} />
           <StatCard icon={<Zap size={18} />} label="Samples" value={formatNumber(totals.samples)} />
           <StatCard icon={<Activity size={18} />} label="Accuracy" value={formatPercent(totals.accuracy)} />
+          <StatCard icon={<Activity size={18} />} label="Success rate" value={formatPercent(totals.success_rate)} />
+          <StatCard icon={<Activity size={18} />} label="Response rate" value={formatPercent(totals.response_rate)} />
           <StatCard icon={<Clock3 size={18} />} label="Duration" value={formatDuration(totals.total_duration_sec)} />
           <StatCard icon={<FileJson size={18} />} label="Tokens" value={formatNumber(totals.total_tokens)} />
           <StatCard icon={<Cpu size={18} />} label="Failures" value={formatNumber(totals.failed_evaluations)} />
@@ -624,10 +631,21 @@ function EvaluationExplorer({ evaluations }: { evaluations: EvaluationRecord[] }
                 <InfoBlock title="Artifact id" value={evaluation.evaluation_id} />
                 <InfoBlock title="Prompt tokens" value={formatNumber(metrics.total_prompt_tokens)} />
                 <InfoBlock title="Completion tokens" value={formatNumber(metrics.total_completion_tokens)} />
+                <InfoBlock title="Avg prompt eval" value={formatDuration(metrics.avg_prompt_eval_duration_sec)} />
+                <InfoBlock title="Avg eval" value={formatDuration(metrics.avg_eval_duration_sec)} />
+                <InfoBlock title="Avg load" value={formatDuration(metrics.avg_load_duration_sec)} />
+                <InfoBlock title="Success rate" value={formatPercent(metrics.success_rate)} />
+                <InfoBlock title="Response rate" value={formatPercent(metrics.response_rate)} />
                 <InfoBlock title="Avg throughput" value={`${toNumber(metrics.avg_tokens_per_second).toFixed(2)} tok/s`} />
                 <InfoBlock title="Embedded samples" value={formatNumber(evaluation.sample_count_embedded)} />
               </div>
               {evaluation.error ? <p className="status-bad detail-error">{evaluation.error}</p> : null}
+              <div className="sample-panels">
+                <TextBlock title="Dataset metadata" value={evaluation.dataset} />
+                <TextBlock title="Model metadata" value={evaluation.model} />
+                <TextBlock title="Metric summary" value={evaluation.metrics} />
+                <TextBlock title="Full evaluation JSON" value={evaluation} />
+              </div>
               <div className="artifact-list">
                 {Object.entries(evaluation.artifact_paths ?? {}).map(([key, value]) => (
                   <div className="artifact-item" key={key}>
@@ -765,6 +783,13 @@ function SampleExplorer({
                 <InfoBlock title="Ended" value={formatDate(sample.ended_at)} />
                 <InfoBlock title="Latency" value={formatDuration(sample.latency_sec)} />
                 <InfoBlock title="Total duration" value={formatDuration(sample.total_duration_sec)} />
+                <InfoBlock title="Load duration" value={formatDuration(sample.load_duration_sec)} />
+                <InfoBlock title="Prompt eval" value={formatDuration(sample.prompt_eval_duration_sec)} />
+                <InfoBlock title="Eval duration" value={formatDuration(sample.eval_duration_sec)} />
+                <InfoBlock title="Prompt tokens" value={formatNumber(sample.prompt_tokens)} />
+                <InfoBlock title="Completion tokens" value={formatNumber(sample.completion_tokens)} />
+                <InfoBlock title="Prompt chars" value={formatNumber(sample.prompt_chars)} />
+                <InfoBlock title="Response chars" value={formatNumber(sample.response_chars)} />
                 <InfoBlock title="Throughput" value={`${toNumber(sample.tokens_per_second).toFixed(2)} tok/s`} />
                 <InfoBlock title="Provider" value={String(sample.provider ?? "-")} />
               </div>
@@ -786,6 +811,11 @@ function SampleExplorer({
                   <pre>{JSON.stringify(sample.raw_provider_metrics, null, 2)}</pre>
                 </div>
               ) : null}
+
+              <div className="json-block">
+                <div className="json-block__title">Full sample JSON</div>
+                <pre>{JSON.stringify(sample, null, 2)}</pre>
+              </div>
             </details>
           );
         })}
@@ -843,6 +873,66 @@ function EnvironmentPanel({ session }: { session: BenchmarkSession }) {
           <MetadataItem label="Artifacts dir" value={session.source?.artifacts_dir ?? "-"} />
           <MetadataItem label="Website sync dir" value={session.source?.sync_dir ?? "-"} />
         </dl>
+      </div>
+    </section>
+  );
+}
+
+function DataArchivePanel({ session }: { session: BenchmarkSession }) {
+  return (
+    <section className="panel">
+      <div className="panel-heading">
+        <FileJson size={18} />
+        <h2>Raw data archive</h2>
+      </div>
+      <div className="details-list">
+        <details className="terminal-details">
+          <summary>
+            <div>
+              <div className="summary-title">Run manifest</div>
+              <div className="summary-subtitle">Exact benchmark selection, system metadata, repository metadata, and runtime config path.</div>
+            </div>
+          </summary>
+          <div className="json-block">
+            <pre>{JSON.stringify(session.run.manifest, null, 2)}</pre>
+          </div>
+        </details>
+
+        <details className="terminal-details">
+          <summary>
+            <div>
+              <div className="summary-title">Benchmark catalog slice</div>
+              <div className="summary-subtitle">Selected benchmark metadata mirrored from the run manifest.</div>
+            </div>
+          </summary>
+          <div className="json-block">
+            <pre>{JSON.stringify(session.catalog ?? {}, null, 2)}</pre>
+          </div>
+        </details>
+
+        <details className="terminal-details">
+          <summary>
+            <div>
+              <div className="summary-title">Session source metadata</div>
+              <div className="summary-subtitle">Artifact root, export directory, and website sync directory.</div>
+            </div>
+          </summary>
+          <div className="json-block">
+            <pre>{JSON.stringify(session.source ?? {}, null, 2)}</pre>
+          </div>
+        </details>
+
+        <details className="terminal-details">
+          <summary>
+            <div>
+              <div className="summary-title">Full session JSON</div>
+              <div className="summary-subtitle">The exact payload the website is rendering.</div>
+            </div>
+          </summary>
+          <div className="json-block">
+            <pre>{JSON.stringify(session, null, 2)}</pre>
+          </div>
+        </details>
       </div>
     </section>
   );
