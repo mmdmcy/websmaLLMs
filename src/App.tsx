@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   Activity,
+  AlertTriangle,
   Clock3,
   Cpu,
   Database,
@@ -49,6 +50,8 @@ const SAMPLE_BASE_FIELDS = new Set([
   "expected_answer",
   "parsed_prediction",
   "is_correct",
+  "used_raw_fallback",
+  "raw_fallback_attempted",
   "error",
   "started_at",
   "ended_at",
@@ -324,6 +327,7 @@ function OverviewPanel({ session, sourceLabel }: { session: BenchmarkSession; so
   const samplesPerBenchmark = toNumber((manifest.samples_per_benchmark as number | undefined) ?? 0);
   const requestedBenchmarks = Array.isArray(manifest.requested_benchmarks) ? manifest.requested_benchmarks.length : 0;
   const selectedModels = Array.isArray(manifest.models) ? manifest.models.length : 0;
+  const highFallbackModels = session.leaderboard.filter((row) => toNumber(row.raw_fallback_rate) >= 0.25).length;
 
   return (
     <section className="section-grid">
@@ -340,10 +344,18 @@ function OverviewPanel({ session, sourceLabel }: { session: BenchmarkSession; so
           <StatCard icon={<Activity size={18} />} label="Accuracy" value={formatPercent(totals.accuracy)} />
           <StatCard icon={<Activity size={18} />} label="Success rate" value={formatPercent(totals.success_rate)} />
           <StatCard icon={<Activity size={18} />} label="Response rate" value={formatPercent(totals.response_rate)} />
+          <StatCard icon={<AlertTriangle size={18} />} label="Raw fallback" value={formatPercent(totals.raw_fallback_rate)} />
           <StatCard icon={<Clock3 size={18} />} label="Duration" value={formatDuration(totals.total_duration_sec)} />
           <StatCard icon={<FileJson size={18} />} label="Tokens" value={formatNumber(totals.total_tokens)} />
           <StatCard icon={<Cpu size={18} />} label="Failures" value={formatNumber(totals.failed_evaluations)} />
+          <StatCard icon={<Layers3 size={18} />} label="Per benchmark" value={formatNumber(samplesPerBenchmark)} />
         </div>
+        <p className="panel-copy">
+          {samplesPerBenchmark > 0 ? `${formatNumber(samplesPerBenchmark)} samples per benchmark. ` : ""}
+          {highFallbackModels > 0
+            ? `${formatNumber(highFallbackModels)} model${highFallbackModels === 1 ? "" : "s"} relied on raw fallback for at least 25% of samples, so those rows are partly measuring answer-format compliance as well as capability.`
+            : "Every model in this run stayed in the requested answer format without needing heavy raw fallback parsing."}
+        </p>
       </div>
 
       <div className="panel">
@@ -356,9 +368,11 @@ function OverviewPanel({ session, sourceLabel }: { session: BenchmarkSession; so
           <MetadataItem label="Created at" value={formatDate(manifest.created_at)} />
           <MetadataItem label="Exported at" value={formatDate(session.exported_at)} />
           <MetadataItem label="Source file" value={sourceLabel} />
+          <MetadataItem label="Payload profile" value={String(session.source?.payload_profile ?? "-")} />
           <MetadataItem label="Selected models" value={String(selectedModels)} />
           <MetadataItem label="Requested benchmarks" value={String(requestedBenchmarks)} />
           <MetadataItem label="Samples per benchmark" value={String(samplesPerBenchmark || 0)} />
+          <MetadataItem label="Sample payload" value={String(session.source?.sample_payload_mode ?? "-")} />
           <MetadataItem label="Temperature" value={String((manifest.temperature as number | string | undefined) ?? 0)} />
         </dl>
       </div>
@@ -492,6 +506,10 @@ function LeaderboardPanel({
           />
         </label>
       </div>
+      <p className="panel-copy">
+        Accuracy is paired with answer-format compliance. Clean rows answered in the requested format; raw-heavy rows needed
+        fallback parsing on most samples.
+      </p>
 
       <div className="table-wrap">
         <table className="terminal-table">
@@ -501,6 +519,7 @@ function LeaderboardPanel({
               <th>Model</th>
               <th>Provider</th>
               <th>Accuracy</th>
+              <th>Format</th>
               <th>Latency</th>
               <th>Samples</th>
               <th>Errors</th>
@@ -522,6 +541,10 @@ function LeaderboardPanel({
                 </td>
                 <td>{row.provider ?? "-"}</td>
                 <td>{formatPercent(row.overall_accuracy)}</td>
+                <td>
+                  <CompliancePill rate={row.raw_fallback_rate} />
+                  <div className="table-sub">{formatPercent(row.raw_fallback_rate)} raw fallback</div>
+                </td>
                 <td>{formatDuration(row.avg_latency_sec)}</td>
                 <td>{formatNumber(row.total_samples)}</td>
                 <td>{formatNumber(row.error_count)}</td>
@@ -573,12 +596,17 @@ function BenchmarkMatrix({ benchmarkNames, rows }: { benchmarkNames: string[]; r
                 {benchmarkNames.map((benchmarkName) => {
                   const cell = row.benchmarks?.[benchmarkName];
                   const accuracy = percentNumber(cell?.accuracy);
+                  const metaParts = [];
+                  if (toNumber(cell?.sample_count) > 0) {
+                    metaParts.push(`${formatNumber(cell?.sample_count)} samples`);
+                  }
+                  metaParts.push(formatDuration(cell?.avg_latency_sec));
                   return (
                     <td key={`${row.model_name}-${benchmarkName}`}>
                       <div className={`matrix-cell ${matrixClassName(accuracy)}`}>
                         <strong>{formatPercent(cell?.accuracy)}</strong>
-                        <span>{formatDuration(cell?.avg_latency_sec)}</span>
-                        <span>{formatNumber(cell?.sample_count)} samples</span>
+                        <span>{metaParts.join(" / ")}</span>
+                        <span>{formatComplianceDetail(cell?.raw_fallback_rate)}</span>
                       </div>
                     </td>
                   );
@@ -623,6 +651,7 @@ function EvaluationExplorer({ evaluations }: { evaluations: EvaluationRecord[] }
                   <span>{formatPercent(metrics.accuracy)}</span>
                   <span>{formatDuration(metrics.avg_latency_sec)}</span>
                   <span>{formatNumber(metrics.sample_count)} samples</span>
+                  <CompliancePill rate={metrics.raw_fallback_rate} />
                   <span className={evaluation.status === "completed" ? "status-ok" : "status-bad"}>{evaluation.status ?? "unknown"}</span>
                 </div>
               </summary>
@@ -636,9 +665,17 @@ function EvaluationExplorer({ evaluations }: { evaluations: EvaluationRecord[] }
                 <InfoBlock title="Avg load" value={formatDuration(metrics.avg_load_duration_sec)} />
                 <InfoBlock title="Success rate" value={formatPercent(metrics.success_rate)} />
                 <InfoBlock title="Response rate" value={formatPercent(metrics.response_rate)} />
+                <InfoBlock title="Raw fallback" value={formatPercent(metrics.raw_fallback_rate)} />
+                <InfoBlock title="Fallback attempts" value={formatPercent(metrics.raw_fallback_attempted_rate)} />
                 <InfoBlock title="Avg throughput" value={`${toNumber(metrics.avg_tokens_per_second).toFixed(2)} tok/s`} />
                 <InfoBlock title="Embedded samples" value={formatNumber(evaluation.sample_count_embedded)} />
               </div>
+              {toNumber(metrics.raw_fallback_rate) >= 0.25 ? (
+                <p className="detail-note">
+                  This evaluation relied on raw fallback parsing for {formatPercent(metrics.raw_fallback_rate)} of samples, so the
+                  score blends task performance with answer-format compliance.
+                </p>
+              ) : null}
               {evaluation.error ? <p className="status-bad detail-error">{evaluation.error}</p> : null}
               <div className="sample-panels">
                 <TextBlock title="Dataset metadata" value={evaluation.dataset} />
@@ -766,6 +803,8 @@ function SampleExplorer({
                 </div>
                 <div className="summary-metrics">
                   <span className={statusClass}>{statusLabel}</span>
+                  {sample.used_raw_fallback ? <span className="status-warn">raw fallback</span> : null}
+                  {!sample.used_raw_fallback && sample.raw_fallback_attempted ? <span className="status-warn">fallback tried</span> : null}
                   <span>{formatDuration(sample.latency_sec)}</span>
                   <span>{formatNumber(sample.total_tokens)} tok</span>
                 </div>
@@ -791,6 +830,7 @@ function SampleExplorer({
                 <InfoBlock title="Prompt chars" value={formatNumber(sample.prompt_chars)} />
                 <InfoBlock title="Response chars" value={formatNumber(sample.response_chars)} />
                 <InfoBlock title="Throughput" value={`${toNumber(sample.tokens_per_second).toFixed(2)} tok/s`} />
+                <InfoBlock title="Format path" value={formatSampleFormatPath(sample)} />
                 <InfoBlock title="Provider" value={String(sample.provider ?? "-")} />
               </div>
 
@@ -807,7 +847,9 @@ function SampleExplorer({
 
               {sample.raw_provider_metrics ? (
                 <div className="json-block">
-                  <div className="json-block__title">Raw provider metrics</div>
+                  <div className="json-block__title">
+                    {toRecord(sample.raw_provider_metrics).trimmed ? "Raw provider metrics (trimmed synced view)" : "Raw provider metrics"}
+                  </div>
                   <pre>{JSON.stringify(sample.raw_provider_metrics, null, 2)}</pre>
                 </div>
               ) : null}
@@ -847,7 +889,8 @@ function EnvironmentPanel({ session }: { session: BenchmarkSession }) {
           <h2>Runtime environment</h2>
         </div>
         <dl className="meta-list">
-          <MetadataItem label="Hostname" value={String(system.hostname ?? "-")} />
+          <MetadataItem label="Payload profile" value={String(session.source?.payload_profile ?? "-")} />
+          <MetadataItem label="Sample payload" value={String(session.source?.sample_payload_mode ?? "-")} />
           <MetadataItem label="Platform" value={String(system.platform ?? "-")} />
           <MetadataItem label="Release" value={String(system.platform_release ?? "-")} />
           <MetadataItem label="Architecture" value={String(system.architecture ?? "-")} />
@@ -926,7 +969,7 @@ function DataArchivePanel({ session }: { session: BenchmarkSession }) {
           <summary>
             <div>
               <div className="summary-title">Full session JSON</div>
-              <div className="summary-subtitle">The exact payload the website is rendering.</div>
+              <div className="summary-subtitle">The exact synced payload the website is rendering right now.</div>
             </div>
           </summary>
           <div className="json-block">
@@ -936,6 +979,11 @@ function DataArchivePanel({ session }: { session: BenchmarkSession }) {
       </div>
     </section>
   );
+}
+
+function CompliancePill({ rate }: { rate: unknown }) {
+  const state = complianceState(rate);
+  return <span className={`compliance-pill compliance-pill--${state}`}>{complianceLabel(rate)}</span>;
 }
 
 function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
@@ -1041,6 +1089,46 @@ function shortModelName(modelName: string): string {
     return modelName;
   }
   return `${modelName.slice(0, 15)}...`;
+}
+
+function complianceState(value: unknown): "clean" | "mixed" | "raw-heavy" {
+  const rate = toNumber(value);
+  if (rate >= 0.75) {
+    return "raw-heavy";
+  }
+  if (rate >= 0.05) {
+    return "mixed";
+  }
+  return "clean";
+}
+
+function complianceLabel(value: unknown): string {
+  const state = complianceState(value);
+  if (state === "raw-heavy") {
+    return "Raw-heavy";
+  }
+  if (state === "mixed") {
+    return "Mixed";
+  }
+  return "Clean";
+}
+
+function formatComplianceDetail(value: unknown): string {
+  const rate = toNumber(value);
+  if (rate < 0.05) {
+    return "clean format";
+  }
+  return `${formatPercent(rate)} raw fallback`;
+}
+
+function formatSampleFormatPath(sample: Pick<EvaluationSample, "used_raw_fallback" | "raw_fallback_attempted">): string {
+  if (sample.used_raw_fallback) {
+    return "Raw fallback used";
+  }
+  if (sample.raw_fallback_attempted) {
+    return "Fallback attempted";
+  }
+  return "Normal response";
 }
 
 function matrixClassName(accuracy: number): string {

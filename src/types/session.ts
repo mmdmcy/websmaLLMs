@@ -21,6 +21,10 @@ export interface BenchmarkMetricSummary {
   success_rate?: number;
   responded_count?: number;
   response_rate?: number;
+  raw_fallback_count?: number;
+  raw_fallback_rate?: number;
+  raw_fallback_attempted_count?: number;
+  raw_fallback_attempted_rate?: number;
   error_count?: number;
   avg_latency_sec?: number;
   max_latency_sec?: number;
@@ -88,6 +92,10 @@ export interface LeaderboardRow {
   success_count?: number;
   responded_count?: number;
   error_count?: number;
+  raw_fallback_count?: number;
+  raw_fallback_rate?: number;
+  raw_fallback_attempted_count?: number;
+  raw_fallback_attempted_rate?: number;
   avg_latency_sec?: number;
   avg_load_duration_sec?: number;
   avg_prompt_eval_duration_sec?: number;
@@ -131,6 +139,8 @@ export interface EvaluationSample {
   expected_answer?: string;
   parsed_prediction?: string;
   is_correct?: boolean;
+  used_raw_fallback?: boolean;
+  raw_fallback_attempted?: boolean;
   error?: string | null;
   started_at?: string;
   ended_at?: string;
@@ -199,6 +209,8 @@ export interface SessionSourceInfo {
   artifacts_dir?: string;
   output_dir?: string;
   sync_dir?: string | null;
+  payload_profile?: string;
+  sample_payload_mode?: string;
 }
 
 export interface SessionRunInfo {

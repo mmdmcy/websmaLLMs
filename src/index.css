@@ -287,6 +287,13 @@ pre {
   font-size: 12px;
 }
 
+.panel-copy {
+  margin: 14px 0 0;
+  color: var(--muted);
+  max-width: 78ch;
+  font-size: 13px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -404,6 +411,34 @@ pre {
   color: var(--muted);
   font-size: 12px;
   margin-top: 2px;
+}
+
+.compliance-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.compliance-pill--clean {
+  color: var(--green);
+  background: rgba(93, 224, 149, 0.08);
+}
+
+.compliance-pill--mixed {
+  color: var(--amber);
+  background: rgba(216, 179, 91, 0.08);
+}
+
+.compliance-pill--raw-heavy {
+  color: var(--red);
+  background: rgba(240, 127, 127, 0.08);
 }
 
 .matrix-cell {
@@ -567,6 +602,11 @@ pre {
 
 .detail-error {
   padding: 0 14px 14px;
+}
+
+.detail-note {
+  padding: 0 14px 14px;
+  color: var(--amber);
 }
 
 .status-ok {
