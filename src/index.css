@@ -1,30 +1,29 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: light;
-  --bg: #f4efe6;
-  --bg-warm: #eadfce;
-  --surface: rgba(255, 252, 247, 0.82);
-  --surface-strong: #fffdf9;
-  --surface-muted: rgba(255, 255, 255, 0.6);
-  --text: #162235;
-  --muted: #637183;
-  --line: rgba(22, 34, 53, 0.11);
-  --line-strong: rgba(22, 34, 53, 0.2);
-  --accent: #ea5b2b;
-  --accent-deep: #cb4517;
-  --teal: #127b80;
-  --teal-soft: #d8eff0;
-  --lime: #5a9b6e;
-  --lime-soft: #d9eedf;
-  --gold: #d69212;
-  --gold-soft: #f7e7bf;
-  --red: #c94a4f;
-  --red-soft: #f6d9dd;
-  --shadow: 0 26px 70px rgba(39, 30, 20, 0.09);
+  --bg: #f6f8fb;
+  --bg-warm: #eef2f6;
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-muted: #f8fafc;
+  --text: #18212d;
+  --muted: #667487;
+  --line: rgba(24, 33, 45, 0.12);
+  --line-strong: rgba(24, 33, 45, 0.22);
+  --accent: #e6572c;
+  --accent-deep: #bf4020;
+  --teal: #0d7f83;
+  --teal-soft: #d9f0f1;
+  --lime: #4f9467;
+  --lime-soft: #dcefe3;
+  --gold: #bd7c0f;
+  --gold-soft: #f7e8c7;
+  --red: #c24452;
+  --red-soft: #f5dbe0;
+  --shadow: 0 18px 42px rgba(29, 38, 52, 0.08);
 }
 
 * {
@@ -53,13 +52,9 @@ body,
 
 body {
   margin: 0;
-  font-family: "Manrope", sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(circle at top left, rgba(234, 91, 43, 0.12), transparent 24%),
-    radial-gradient(circle at 90% 12%, rgba(18, 123, 128, 0.16), transparent 20%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
-    linear-gradient(135deg, var(--bg) 0%, #f7f3eb 48%, var(--bg-warm) 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-warm) 100%);
   line-height: 1.5;
 }
 
@@ -87,16 +82,16 @@ a {
 
 pre,
 code {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
 h1,
 h2,
 h3 {
   margin: 0;
-  font-family: "Fraunces", serif;
+  font-family: inherit;
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 p {
@@ -122,29 +117,6 @@ p {
   padding: 28px 0 48px;
 }
 
-.background-bloom {
-  position: fixed;
-  width: 34vw;
-  height: 34vw;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.34;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.background-bloom--left {
-  top: -8vw;
-  left: -8vw;
-  background: rgba(234, 91, 43, 0.26);
-}
-
-.background-bloom--right {
-  top: 22vh;
-  right: -10vw;
-  background: rgba(18, 123, 128, 0.22);
-}
-
 .hero-panel,
 .panel {
   position: relative;
@@ -152,25 +124,20 @@ p {
   background: var(--surface);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
 }
 
 .hero-panel {
   display: grid;
   grid-template-columns: 1.3fr 0.9fr;
   gap: 22px;
-  padding: 28px;
-  border-radius: 34px;
+  padding: 24px;
+  border-radius: 8px;
   margin-bottom: 22px;
   overflow: hidden;
 }
 
 .hero-panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent 55%);
-  pointer-events: none;
+  content: none;
 }
 
 .hero-panel__copy,
@@ -186,9 +153,9 @@ p {
 }
 
 .hero-panel__copy h1 {
-  max-width: 14ch;
-  font-size: clamp(2.4rem, 3.6vw, 5rem);
-  line-height: 0.98;
+  max-width: 20ch;
+  font-size: clamp(2rem, 3vw, 3.4rem);
+  line-height: 1.02;
 }
 
 .hero-panel__lede,
@@ -230,7 +197,7 @@ p {
 .champion-card,
 .duel-stat-card,
 .sample-card {
-  border-radius: 22px;
+  border-radius: 8px;
 }
 
 .hero-stat,
@@ -259,7 +226,7 @@ p {
   place-items: center;
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: linear-gradient(135deg, rgba(234, 91, 43, 0.12), rgba(18, 123, 128, 0.14));
   color: var(--accent-deep);
 }
@@ -303,8 +270,8 @@ p {
 .hero-meta {
   padding: 18px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
-  border-radius: 26px;
+  background: var(--surface-muted);
+  border-radius: 8px;
 }
 
 .spotlight-card h2,
@@ -380,11 +347,10 @@ p {
   gap: 16px;
   padding: 18px 20px;
   margin-bottom: 22px;
-  border-radius: 24px;
-  background: rgba(255, 252, 247, 0.84);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--line);
-  box-shadow: 0 18px 50px rgba(34, 27, 20, 0.08);
-  backdrop-filter: blur(20px);
+  box-shadow: 0 12px 32px rgba(29, 38, 52, 0.08);
 }
 
 .control-bar__links,
@@ -429,7 +395,7 @@ p {
 .app-select {
   width: 100%;
   padding: 0 14px;
-  border-radius: 16px;
+  border-radius: 8px;
   color: var(--text);
 }
 
@@ -438,7 +404,7 @@ p {
   align-items: center;
   gap: 10px;
   padding: 0 14px;
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 .app-search input {
@@ -479,12 +445,12 @@ p {
 
 .panel {
   padding: 20px;
-  border-radius: 28px;
+  border-radius: 8px;
 }
 
 .panel--nested {
   margin-bottom: 0;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--surface-muted);
 }
 
 .panel--warning {
@@ -513,7 +479,7 @@ p {
 .sample-card {
   padding: 18px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--surface);
 }
 
 .recommendation-card__header,
@@ -532,7 +498,7 @@ p {
 }
 
 .recommendation-card__stats {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 16px 0;
 }
 
@@ -624,12 +590,12 @@ p {
 }
 
 .swap-button {
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 .duel-stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 14px;
   margin-bottom: 18px;
 }
@@ -641,9 +607,9 @@ p {
 
 .duel-stat-card__option {
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--surface);
 }
 
 .duel-stat-card__option.is-winner {
@@ -660,6 +626,10 @@ p {
   width: 100%;
   min-width: 920px;
   border-collapse: collapse;
+}
+
+.data-table--compact {
+  min-width: 760px;
 }
 
 .data-table th,
@@ -690,12 +660,18 @@ p {
   font-size: 0.86rem;
 }
 
+.hash-text {
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
 .heat-cell {
   display: grid;
   gap: 6px;
   min-width: 104px;
   padding: 12px;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid rgba(22, 34, 53, 0.08);
 }
 
@@ -772,6 +748,10 @@ p {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.details-grid--wide {
+  grid-template-columns: 1fr;
+}
+
 .info-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 14px;
@@ -782,13 +762,13 @@ p {
 .info-block,
 .metric-chip {
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 8px;
 }
 
 .metadata-pair,
 .json-block {
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--surface);
 }
 
 .metadata-pair pre,
@@ -806,8 +786,8 @@ p {
 
 .details-panel {
   border: 1px solid var(--line);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.66);
+  border-radius: 8px;
+  background: var(--surface);
   padding: 16px;
 }
 
@@ -834,7 +814,7 @@ p {
 
 .empty-inline {
   padding: 24px;
-  border-radius: 18px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.56);
   border: 1px dashed var(--line-strong);
 }
@@ -891,7 +871,7 @@ p {
   .hero-panel,
   .panel {
     padding: 18px;
-    border-radius: 24px;
+    border-radius: 8px;
   }
 
   .hero-panel__copy h1 {

@@ -18,7 +18,6 @@ import {
   Sparkles,
   Target,
   Upload,
-  Zap,
 } from "lucide-react";
 import {
   Bar,
@@ -46,20 +45,24 @@ import {
   buildModelInsights,
   extractSampleQuestion,
   fallbackTone,
+  formatConfidenceRange,
   formatDate,
   formatDuration,
+  formatHash,
   formatNumber,
+  formatOptionalPercent,
   formatPercent,
   formatRequestedSuites,
   formatScore,
+  getBenchmarkAccuracyCi,
   getBenchmarkAccuracy,
   getBenchmarkFallback,
+  getBenchmarkInvalid,
   getBenchmarkLatency,
   getBenchmarkOptions,
   getFocusScore,
   heatmapColor,
   humanizeToken,
-  ratioNumber,
   samplePriority,
   shortModelName,
   strongestBenchmarks,
@@ -157,7 +160,7 @@ function App() {
   const focusRunnerUp = recommendationPool[1] ?? null;
   const fastestReliable =
     [...recommendationPool]
-      .filter((insight) => insight.fallback <= 0.25 && insight.responseRate >= 0.95)
+      .filter((insight) => insight.fallback <= 0.25 && insight.invalid <= 0.1 && insight.responseRate >= 0.95)
       .sort((left, right) => left.latency - right.latency || right.accuracy - left.accuracy)[0] ??
     recommendationPool[0] ??
     null;
@@ -215,6 +218,9 @@ function App() {
       if (sampleOutcome === "fallback" && !sample.used_raw_fallback) {
         return false;
       }
+      if (sampleOutcome === "invalid" && sample.prediction_valid !== false) {
+        return false;
+      }
       if (!deferredSampleSearch) {
         return true;
       }
@@ -227,6 +233,11 @@ function App() {
         sample.expected_answer,
         sample.parsed_prediction,
         sample.error,
+        sample.sample_id,
+        sample.export_sample_id,
+        sample.sample_input_sha256,
+        sample.prompt_sha256,
+        sample.prompt_template_sha256,
       ]
         .filter((value): value is string => Boolean(value))
         .join(" ")
@@ -271,20 +282,26 @@ function App() {
 
   const totals = session?.summary.totals ?? {};
   const manifest = session?.run.manifest;
+  const manifestRecord = toRecord(manifest);
+  const systemRecord = toRecord(manifestRecord.system);
+  const repositoryRecord = toRecord(manifestRecord.repository);
+  const executionPolicy = toRecord(manifestRecord.execution_policy);
+  const datasetRuntime = toRecord(manifestRecord.dataset_runtime);
+  const configRecord = toRecord(manifestRecord.config);
+  const datasetCache = Array.isArray(manifestRecord.dataset_cache) ? manifestRecord.dataset_cache.map(toRecord) : [];
+  const modelInventory = Array.isArray(manifestRecord.model_inventory) ? manifestRecord.model_inventory.map(toRecord) : [];
+  const runCardPath = session?.summary.run_card_path ?? "";
   const focusGap = focusWinner && focusRunnerUp ? getFocusScore(focusWinner, focusBenchmark) - getFocusScore(focusRunnerUp, focusBenchmark) : 0;
 
   return (
     <div className="app-shell">
-      <div className="background-bloom background-bloom--left" />
-      <div className="background-bloom background-bloom--right" />
-
       <header className="hero-panel">
         <div className="hero-panel__copy">
-          <div className="eyebrow">websmaLLMs decision dashboard</div>
-          <h1>Stop digging through raw runs. See who wins overall, who wins by benchmark, and where the tradeoffs actually land.</h1>
+          <div className="eyebrow">websmaLLMs local benchmark dashboard</div>
+          <h1>Local model results with the audit trail next to the score.</h1>
           <p className="hero-panel__lede">
-            The old page made you do the synthesis yourself. This version pulls the leaderboard, benchmark winners, head-to-head
-            comparisons, and revealing misses into one view so you can decide faster with less scrolling and less clicking.
+            The synced `smaLLMs` export feeds this static page directly: leaderboard, confidence intervals, parse failures,
+            dataset cache state, model digests, and sample-level hashes stay visible in one offline-friendly report.
           </p>
           <div className="hero-actions">
             <button className="app-button" onClick={() => void reloadSynced()} type="button">
@@ -298,10 +315,10 @@ function App() {
             <input accept=".json,application/json" className="sr-only" id="session-import" onChange={handleImportChange} type="file" />
           </div>
           <div className="hero-stats">
-            <HeroStat icon={<Bot size={18} />} label="Models tested" value={formatNumber(totals.models)} />
-            <HeroStat icon={<Database size={18} />} label="Benchmarks" value={formatNumber(totals.benchmarks)} />
-            <HeroStat icon={<Zap size={18} />} label="Samples" value={formatNumber(totals.samples)} />
-            <HeroStat icon={<ShieldCheck size={18} />} label="Clean responses" value={formatPercent(1 - ratioNumber(totals.raw_fallback_rate))} />
+            <HeroStat icon={<Target size={18} />} label="Accuracy" value={formatOptionalPercent(totals.accuracy)} />
+            <HeroStat icon={<ShieldCheck size={18} />} label="95% CI" value={formatConfidenceRange(totals.accuracy_ci95_low, totals.accuracy_ci95_high)} />
+            <HeroStat icon={<AlertTriangle size={18} />} label="Invalid predictions" value={formatOptionalPercent(totals.invalid_prediction_rate)} />
+            <HeroStat icon={<Database size={18} />} label="Samples" value={formatNumber(totals.samples)} />
           </div>
         </div>
 
@@ -309,7 +326,7 @@ function App() {
           <div className="spotlight-card">
             <span className="spotlight-card__label">Current focus</span>
             <h2>{focusBenchmark ? focusLabel : "Overall run"}</h2>
-            <p>{focusBenchmark ? `Ranking models by ${focusLabel} first, then cleanliness and speed.` : "Ranking models by the best overall blend of accuracy, speed, and clean formatting."}</p>
+            <p>{focusBenchmark ? `Ranking models by ${focusLabel} first, then parse reliability and speed.` : "Ranking models by accuracy, speed, raw fallback, and parser-valid answers."}</p>
           </div>
           <div className="spotlight-winner">
             <div className="eyebrow">Leading pick</div>
@@ -318,7 +335,7 @@ function App() {
               {focusWinner
                 ? focusBenchmark
                   ? `${formatPercent(getBenchmarkAccuracy(focusWinner, focusBenchmark))} on ${focusLabel} with ${formatDuration(focusWinner.latency)} average latency.`
-                  : `${formatPercent(focusWinner.accuracy)} overall accuracy, ${formatPercent(focusWinner.fallback)} raw fallback, ${formatDuration(focusWinner.latency)} average latency.`
+                  : `${formatPercent(focusWinner.accuracy)} overall accuracy, ${formatPercent(focusWinner.invalid)} invalid predictions, ${formatDuration(focusWinner.latency)} average latency.`
                 : "Load a session to see the leading model and its tradeoffs."}
             </p>
             <div className="spotlight-metrics">
@@ -333,6 +350,7 @@ function App() {
             <MetaLine label="Source file" value={source?.label ?? "/data/latest-session.json"} />
             <MetaLine label="Schema" value={session?.schema_version ?? "-"} />
             <MetaLine label="Requested suite" value={formatRequestedSuites(manifest?.requested_benchmarks)} />
+            <MetaLine label="Run card" value={runCardPath || "Next export will include one"} />
           </div>
         </div>
       </header>
@@ -383,12 +401,12 @@ function App() {
           </nav>
 
           <section className="section" id="winners">
-            <div className="section-heading"><Sparkles size={18} /><div><h2>Best for what</h2><p>Five quick answers before you ever open a table.</p></div></div>
+            <div className="section-heading"><Sparkles size={18} /><div><h2>Best for what</h2><p>Five practical cuts through the run before you open the full table.</p></div></div>
             <div className="recommendation-grid">
-              <RecommendationCard badge="Best overall" metricLabel="Composite fit" metricValue={formatScore(overallWinner?.overallScore)} note="Best blend of accuracy, speed, and formatting cleanliness across the full run." runnerUp={recommendationPool[1] ?? null} winner={overallWinner} />
+              <RecommendationCard badge="Best overall" metricLabel="Composite fit" metricValue={formatScore(overallWinner?.overallScore)} note="Best blend of accuracy, speed, parser validity, and raw fallback behavior across the full run." runnerUp={recommendationPool[1] ?? null} winner={overallWinner} />
               <RecommendationCard badge={focusBenchmark ? `Best on ${focusLabel}` : "Leader right now"} metricLabel={focusBenchmark ? focusLabel : "Overall accuracy"} metricValue={focusBenchmark ? formatPercent(getBenchmarkAccuracy(focusWinner, focusBenchmark)) : formatPercent(focusWinner?.accuracy)} note={focusBenchmark ? `This is the strongest pick if ${focusLabel} matters most in this session.` : "This is the top-ranked model in the current overall lens."} runnerUp={focusRunnerUp} winner={focusWinner} />
-              <RecommendationCard badge="Fastest dependable" metricLabel="Avg latency" metricValue={formatDuration(fastestReliable?.latency)} note="Filters for low fallback and strong response rate so speed does not come from a broken run." runnerUp={null} winner={fastestReliable} />
-              <RecommendationCard badge="Cleanest formatting" metricLabel="Raw fallback" metricValue={formatPercent(cleanest?.fallback)} note="Best when prompt compliance and parseability matter as much as raw capability." runnerUp={null} winner={cleanest} />
+              <RecommendationCard badge="Fastest dependable" metricLabel="Avg latency" metricValue={formatDuration(fastestReliable?.latency)} note="Filters for low fallback, low invalid prediction rate, and strong response rate so speed does not come from a broken run." runnerUp={null} winner={fastestReliable} />
+              <RecommendationCard badge="Cleanest output" metricLabel="Invalid rate" metricValue={formatPercent(cleanest?.invalid)} note="Best when prompt compliance and parseability matter as much as raw capability." runnerUp={null} winner={cleanest} />
               <RecommendationCard badge="Best efficiency" metricLabel="Efficiency score" metricValue={formatScore(leanest?.efficiencyScore)} note="Rewards accuracy while penalizing slow runs and heavy token burn." runnerUp={null} winner={leanest} />
             </div>
           </section>
@@ -425,7 +443,8 @@ function App() {
                     <p>{winner ? `${formatPercent(getBenchmarkAccuracy(winner, benchmark.key))} accuracy` : "No completed score yet."}</p>
                     <div className="champion-card__meta">
                       <span>{winner ? formatDuration(getBenchmarkLatency(winner, benchmark.key)) : "-"}</span>
-                      <span>{winner ? formatPercent(winner.fallback) : "-"}</span>
+                      <span>{winner ? `${formatPercent(getBenchmarkFallback(winner, benchmark.key))} fallback` : "-"}</span>
+                      <span>{winner ? `${formatPercent(getBenchmarkInvalid(winner, benchmark.key))} invalid` : "-"}</span>
                     </div>
                     <div className="champion-card__footer">{runnerUp ? `+${formatScore(getBenchmarkAccuracy(winner, benchmark.key) - getBenchmarkAccuracy(runnerUp, benchmark.key))} pts vs ${runnerUp.shortName}` : "No runner-up available"}</div>
                   </article>
@@ -454,6 +473,7 @@ function App() {
             <div className="duel-stat-grid">
               <DuelStatCard better="higher" label="Overall accuracy" leftDisplay={formatPercent(leftModel?.accuracy)} leftName={leftModel?.shortName ?? "-"} leftValue={leftModel?.accuracy ?? 0} rightDisplay={formatPercent(rightModel?.accuracy)} rightName={rightModel?.shortName ?? "-"} rightValue={rightModel?.accuracy ?? 0} />
               <DuelStatCard better="lower" label="Average latency" leftDisplay={formatDuration(leftModel?.latency)} leftName={leftModel?.shortName ?? "-"} leftValue={leftModel?.latency ?? 0} rightDisplay={formatDuration(rightModel?.latency)} rightName={rightModel?.shortName ?? "-"} rightValue={rightModel?.latency ?? 0} />
+              <DuelStatCard better="lower" label="Invalid predictions" leftDisplay={formatPercent(leftModel?.invalid)} leftName={leftModel?.shortName ?? "-"} leftValue={leftModel?.invalid ?? 0} rightDisplay={formatPercent(rightModel?.invalid)} rightName={rightModel?.shortName ?? "-"} rightValue={rightModel?.invalid ?? 0} />
               <DuelStatCard better="lower" label="Raw fallback" leftDisplay={formatPercent(leftModel?.fallback)} leftName={leftModel?.shortName ?? "-"} leftValue={leftModel?.fallback ?? 0} rightDisplay={formatPercent(rightModel?.fallback)} rightName={rightModel?.shortName ?? "-"} rightValue={rightModel?.fallback ?? 0} />
               <DuelStatCard better="lower" label="Token spend" leftDisplay={formatNumber(leftModel?.tokens)} leftName={leftModel?.shortName ?? "-"} leftValue={leftModel?.tokens ?? 0} rightDisplay={formatNumber(rightModel?.tokens)} rightName={rightModel?.shortName ?? "-"} rightValue={rightModel?.tokens ?? 0} />
             </div>
@@ -503,21 +523,25 @@ function App() {
               </div>
               <div className="table-wrap">
                 <table className="data-table">
-                  <thead><tr><th>Rank</th><th>Model</th><th>Fit</th><th>Overall</th><th>{focusBenchmark ? focusLabel : "Best benchmark"}</th><th>Latency</th><th>Fallback</th><th>Strongest on</th></tr></thead>
+                  <thead><tr><th>Rank</th><th>Model</th><th>Fit</th><th>Overall</th><th>95% CI</th><th>{focusBenchmark ? focusLabel : "Best benchmark"}</th><th>Latency</th><th>Invalid</th><th>Fallback</th><th>Digest</th><th>Strongest on</th></tr></thead>
                   <tbody>
                     {filteredInsights.map((insight, index) => {
                       const topBenchmarks = strongestBenchmarks(insight);
                       const focusValue = focusBenchmark ? formatPercent(getBenchmarkAccuracy(insight, focusBenchmark)) : `${topBenchmarks[0]?.label ?? "-"} ${formatPercent(topBenchmarks[0]?.accuracy ?? 0)}`;
+                      const [ciLow, ciHigh] = focusBenchmark ? getBenchmarkAccuracyCi(insight, focusBenchmark) : [insight.accuracyCiLow, insight.accuracyCiHigh];
                       return (
                         <tr key={insight.modelName}>
                           <td>{index + 1}</td>
-                          <td><div className="table-main">{insight.modelName}</div><div className="table-sub">{(insight.row.parameters ?? "unknown size").toString()} · {(insight.row.quantization ?? insight.provider).toString()}</div></td>
+                          <td><div className="table-main">{insight.modelName}</div><div className="table-sub">{(insight.row.parameters ?? "unknown size").toString()} / {(insight.row.quantization ?? insight.provider).toString()}</div></td>
                           <td>{formatScore(getFocusScore(insight, focusBenchmark))}</td>
                           <td>{formatPercent(insight.accuracy)}</td>
+                          <td>{formatConfidenceRange(ciLow, ciHigh)}</td>
                           <td>{focusValue}</td>
                           <td>{formatDuration(insight.latency)}</td>
+                          <td><SignalPill tone={fallbackTone(insight.invalid)}>{formatPercent(insight.invalid)}</SignalPill></td>
                           <td><SignalPill tone={fallbackTone(insight.fallback)}>{formatPercent(insight.fallback)}</SignalPill></td>
-                          <td>{topBenchmarks.map((item) => item.label).join(" · ") || "-"}</td>
+                          <td className="hash-text">{formatHash(insight.row.digest)}</td>
+                          <td>{topBenchmarks.map((item) => item.label).join(" / ") || "-"}</td>
                         </tr>
                       );
                     })}
@@ -538,11 +562,13 @@ function App() {
                         {benchmarkOptions.map((benchmark) => {
                           const accuracy = getBenchmarkAccuracy(insight, benchmark.key);
                           const fallback = getBenchmarkFallback(insight, benchmark.key);
+                          const invalid = getBenchmarkInvalid(insight, benchmark.key);
                           return (
                             <td key={`${insight.modelName}-${benchmark.key}`}>
-                              <div className="heat-cell" style={{ background: `linear-gradient(180deg, ${heatmapColor(accuracy, fallback)} 0%, rgba(255, 255, 255, 0.96) 100%)` }}>
+                              <div className="heat-cell" style={{ background: `linear-gradient(180deg, ${heatmapColor(accuracy, Math.max(fallback, invalid))} 0%, rgba(255, 255, 255, 0.96) 100%)` }}>
                                 <strong>{formatPercent(accuracy)}</strong>
                                 <span>{formatDuration(getBenchmarkLatency(insight, benchmark.key))}</span>
+                                <span>{formatPercent(invalid)} invalid</span>
                               </div>
                             </td>
                           );
@@ -564,13 +590,13 @@ function App() {
               <label className="control-field">
                 <span>Outcome lens</span>
                 <select className="app-select" onChange={(event) => setSampleOutcome(event.target.value)} value={sampleOutcome}>
-                  <option value="incorrect">Incorrect only</option><option value="errors">Errors only</option><option value="fallback">Fallback used</option><option value="correct">Correct only</option><option value="all">All visible samples</option>
+                  <option value="incorrect">Incorrect only</option><option value="invalid">Invalid predictions</option><option value="errors">Errors only</option><option value="fallback">Fallback used</option><option value="correct">Correct only</option><option value="all">All visible samples</option>
                 </select>
               </label>
             </div>
             <div className="sample-summary">
               <SignalPill tone="neutral">{formatNumber(filteredSamples.length)} samples in view</SignalPill>
-              <span>Scope: {focusBenchmark ? focusLabel : "all benchmarks"} · {compareLeft && compareRight ? `${shortModelName(compareLeft)} vs ${shortModelName(compareRight)}` : "all available models"}</span>
+              <span>Scope: {focusBenchmark ? focusLabel : "all benchmarks"} / {compareLeft && compareRight ? `${shortModelName(compareLeft)} vs ${shortModelName(compareRight)}` : "all available models"}</span>
             </div>
             {displayedSamples.length > 0 ? <div className="sample-grid">{displayedSamples.map((sample) => <SampleCard key={sample.sample_id ?? `${sample.displayModelName}-${sample.displayBenchmarkName}-${sample.sample_index}`} sample={sample} />)}</div> : <div className="empty-inline"><p>No samples match the current spotlight filters.</p></div>}
             {visibleSamples < filteredSamples.length ? <div className="load-more-row"><button className="app-button" onClick={() => setVisibleSamples((count) => count + SAMPLE_PAGE_SIZE)} type="button">Show {Math.min(SAMPLE_PAGE_SIZE, filteredSamples.length - visibleSamples)} more samples</button></div> : null}
@@ -585,11 +611,11 @@ function App() {
                   <div className="panel panel--nested">
                     <div className="panel-heading"><Cpu size={18} /><h3>Runtime</h3></div>
                     <dl className="meta-list">
-                      <MetaListItem label="Platform" value={String(toRecord(manifest?.system).platform ?? "-")} />
-                      <MetaListItem label="Release" value={String(toRecord(manifest?.system).platform_release ?? "-")} />
-                      <MetaListItem label="Architecture" value={String(toRecord(manifest?.system).architecture ?? "-")} />
-                      <MetaListItem label="Python" value={String(toRecord(manifest?.system).python_version ?? "-")} />
-                      <MetaListItem label="Ollama" value={String(toRecord(manifest?.system).ollama_version ?? "-")} />
+                      <MetaListItem label="Platform" value={String(systemRecord.platform ?? "-")} />
+                      <MetaListItem label="Release" value={String(systemRecord.platform_release ?? "-")} />
+                      <MetaListItem label="Architecture" value={String(systemRecord.architecture ?? "-")} />
+                      <MetaListItem label="Python" value={String(systemRecord.python_version ?? "-")} />
+                      <MetaListItem label="Ollama" value={String(systemRecord.ollama_version ?? "-")} />
                       <MetaListItem label="Payload profile" value={String(session.source?.payload_profile ?? "-")} />
                       <MetaListItem label="Sample payload" value={String(session.source?.sample_payload_mode ?? "-")} />
                     </dl>
@@ -597,14 +623,72 @@ function App() {
                   <div className="panel panel--nested">
                     <div className="panel-heading"><HardDrive size={18} /><h3>Reproducibility</h3></div>
                     <dl className="meta-list">
-                      <MetaListItem label="Git SHA" value={String(toRecord(manifest?.repository).git_sha ?? "-")} />
-                      <MetaListItem label="Git branch" value={String(toRecord(manifest?.repository).git_branch ?? "-")} />
-                      <MetaListItem label="Dirty tree" value={String(toRecord(manifest?.repository).git_dirty ?? "-")} />
+                      <MetaListItem label="Git SHA" value={String(repositoryRecord.git_sha ?? "-")} />
+                      <MetaListItem label="Git branch" value={String(repositoryRecord.git_branch ?? "-")} />
+                      <MetaListItem label="Dirty tree" value={String(repositoryRecord.git_dirty ?? "-")} />
                       <MetaListItem label="Created at" value={formatDate(manifest?.created_at)} />
                       <MetaListItem label="Config path" value={String(manifest?.config_path ?? "-")} />
+                      <MetaListItem label="Config SHA-256" value={formatHash(configRecord.sha256, 16)} />
+                      <MetaListItem label="Run card" value={runCardPath || "-"} />
                       <MetaListItem label="Artifacts dir" value={String(session.source?.artifacts_dir ?? "-")} />
                       <MetaListItem label="Website sync dir" value={String(session.source?.sync_dir ?? "-")} />
                     </dl>
+                  </div>
+                  <div className="panel panel--nested">
+                    <div className="panel-heading"><ShieldCheck size={18} /><h3>Execution policy</h3></div>
+                    <dl className="meta-list">
+                      <MetaListItem label="Offline" value={String(executionPolicy.offline ?? "-")} />
+                      <MetaListItem label="Remote downloads" value={String(executionPolicy.remote_dataset_downloads_allowed ?? datasetRuntime.allow_remote_dataset_downloads ?? "-")} />
+                      <MetaListItem label="Network scope" value={String(executionPolicy.network_scope ?? "-")} />
+                      <MetaListItem label="Dataset cache dir" value={String(datasetRuntime.cache_dir ?? "-")} />
+                    </dl>
+                  </div>
+                </div>
+              </details>
+              <details className="details-panel">
+                <summary><span>Offline cache and local models</span><ArrowUpRight size={16} /></summary>
+                <div className="details-grid details-grid--wide">
+                  <div className="panel panel--nested">
+                    <div className="panel-heading"><Database size={18} /><h3>Dataset cache</h3></div>
+                    {datasetCache.length > 0 ? (
+                      <div className="table-wrap">
+                        <table className="data-table data-table--compact">
+                          <thead><tr><th>Benchmark</th><th>Ready</th><th>Cached</th><th>Requested</th><th>Rows SHA-256</th></tr></thead>
+                          <tbody>
+                            {datasetCache.map((entry) => (
+                              <tr key={String(entry.benchmark ?? entry.display_name ?? entry.cache_key)}>
+                                <td>{String(entry.display_name ?? entry.benchmark ?? "-")}</td>
+                                <td><SignalPill tone={entry.ready ? "good" : "warn"}>{String(entry.ready ?? "-")}</SignalPill></td>
+                                <td>{formatNumber(entry.cached_rows)}</td>
+                                <td>{formatNumber(entry.requested_samples)}</td>
+                                <td className="hash-text">{formatHash(entry.rows_sha256, 16)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : <p className="panel-copy">This session was exported before dataset cache hashes were added. Re-exporting the run with the current `smaLLMs` exporter will populate this table.</p>}
+                  </div>
+                  <div className="panel panel--nested">
+                    <div className="panel-heading"><Bot size={18} /><h3>Local model inventory</h3></div>
+                    {modelInventory.length > 0 ? (
+                      <div className="table-wrap">
+                        <table className="data-table data-table--compact">
+                          <thead><tr><th>Model</th><th>Source</th><th>Digest</th><th>Modified</th><th>Available</th></tr></thead>
+                          <tbody>
+                            {modelInventory.map((entry) => (
+                              <tr key={String(entry.name ?? entry.digest)}>
+                                <td>{String(entry.name ?? "-")}</td>
+                                <td>{String(entry.source ?? entry.provider ?? "-")}</td>
+                                <td className="hash-text">{formatHash(entry.digest, 16)}</td>
+                                <td>{formatDate(entry.modified_at)}</td>
+                                <td><SignalPill tone={entry.available === false ? "warn" : "good"}>{String(entry.available ?? "-")}</SignalPill></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : <p className="panel-copy">This session still has model metadata in the leaderboard, but the newer manifest-level inventory is not present yet.</p>}
                   </div>
                 </div>
               </details>
@@ -612,16 +696,19 @@ function App() {
                 <summary><span>Evaluation inventory</span><ArrowUpRight size={16} /></summary>
                 <div className="table-wrap">
                   <table className="data-table">
-                    <thead><tr><th>Benchmark</th><th>Model</th><th>Accuracy</th><th>Latency</th><th>Fallback</th><th>Samples</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Benchmark</th><th>Model</th><th>Accuracy</th><th>95% CI</th><th>Invalid</th><th>Latency</th><th>Fallback</th><th>Samples</th><th>Prompt hash</th><th>Status</th></tr></thead>
                     <tbody>
                       {[...evaluations].sort((left, right) => `${left.benchmark_name}:${left.model.name}`.localeCompare(`${right.benchmark_name}:${right.model.name}`)).map((evaluation) => (
                         <tr key={evaluation.evaluation_id}>
                           <td>{benchmarkLabelMap[evaluation.benchmark_name] ?? humanizeToken(evaluation.benchmark_name)}</td>
                           <td>{evaluation.model.name}</td>
                           <td>{formatPercent(evaluation.metrics?.accuracy)}</td>
+                          <td>{formatConfidenceRange(evaluation.metrics?.accuracy_ci95_low, evaluation.metrics?.accuracy_ci95_high)}</td>
+                          <td>{formatOptionalPercent(evaluation.metrics?.invalid_prediction_rate)}</td>
                           <td>{formatDuration(evaluation.metrics?.avg_latency_sec)}</td>
                           <td>{formatPercent(evaluation.metrics?.raw_fallback_rate)}</td>
                           <td>{formatNumber(evaluation.metrics?.sample_count)}</td>
+                          <td className="hash-text">{formatHash(evaluation.prompt?.prompt_template_sha256)}</td>
                           <td><SignalPill tone={evaluation.status === "completed" ? "good" : "warn"}>{evaluation.status ?? "unknown"}</SignalPill></td>
                         </tr>
                       ))}

@@ -21,6 +21,14 @@ The benchmark repo can mirror that file automatically when it exports a run:
 - `../smaLLMs/website_exports/latest/session.json`
 - mirrored to `public/data/latest-session.json`
 
+From the sibling `smaLLMs` repository, this is the direct sync path:
+
+```powershell
+.\.venv\Scripts\python.exe smaLLMs.py export --run-id <run_id> --sync-dir ..\websmaLLMs\public\data
+```
+
+The site intentionally stays static: no API server is required, and the synced JSON is the contract between the benchmark engine and this display.
+
 The UI supports two data paths:
 
 - auto-load the mirrored `public/data/latest-session.json`
@@ -31,10 +39,12 @@ The UI supports two data paths:
 The session bundle is intentionally dense. The site reads and displays:
 
 - run metadata and reproducibility info
+- accuracy confidence intervals and invalid prediction rates
+- offline execution policy, dataset cache hashes, and local model digests
 - leaderboard rows across all models
 - per-benchmark coverage and metric matrix
 - per-evaluation metrics and artifact paths
-- sample-level prompt, response, parsed answer, correctness, latency, tokens, and raw provider metadata
+- sample-level prompt, response, parsed answer, correctness, latency, tokens, prompt hashes, stable sample ids, and raw provider metadata
 
 ## Stack
 
