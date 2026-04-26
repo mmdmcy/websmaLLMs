@@ -401,7 +401,7 @@ export function truncateText(value: string, maxLength: number): string {
 export const tooltipStyle = {
   backgroundColor: "rgba(18, 25, 35, 0.96)",
   border: "1px solid rgba(255, 255, 255, 0.12)",
-  borderRadius: "8px",
-  color: "#f8fafc",
+  borderRadius: "18px",
+  color: "#f7f3ec",
   boxShadow: "0 20px 48px rgba(8, 13, 19, 0.28)",
 };

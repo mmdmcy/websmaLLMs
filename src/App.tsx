@@ -295,6 +295,9 @@ function App() {
 
   return (
     <div className="app-shell">
+      <div className="background-bloom background-bloom--left" />
+      <div className="background-bloom background-bloom--right" />
+
       <header className="hero-panel">
         <div className="hero-panel__copy">
           <div className="eyebrow">websmaLLMs local benchmark dashboard</div>
