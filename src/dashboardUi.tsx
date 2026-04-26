@@ -7,7 +7,6 @@ import {
   type SampleRecord,
   compareValues,
   formatDate,
-  formatHash,
   formatDuration,
   formatNumber,
   formatPercent,
@@ -77,7 +76,6 @@ export function RecommendationCard({
         <MetricChip label="Accuracy" value={formatPercent(winner?.accuracy)} />
         <MetricChip label="Latency" value={formatDuration(winner?.latency)} />
         <MetricChip label="Fallback" value={formatPercent(winner?.fallback)} />
-        <MetricChip label="Invalid" value={formatPercent(winner?.invalid)} />
       </div>
       <div className="recommendation-card__footer">
         <span>{topBenchmarks.length > 0 ? `Strongest on ${topBenchmarks.map((item) => item.label).join(" and ")}` : "Waiting for benchmark scores"}</span>
@@ -126,11 +124,10 @@ export function DuelStatCard({
 }
 
 export function SampleCard({ sample }: { sample: SampleRecord }) {
-  const statusTone = sample.error || sample.prediction_valid === false ? "bad" : sample.is_correct ? "good" : "warn";
-  const statusLabel = sample.error ? "Error" : sample.prediction_valid === false ? "Invalid prediction" : sample.is_correct ? "Correct" : "Incorrect";
+  const statusTone = sample.error ? "bad" : sample.is_correct ? "good" : "warn";
+  const statusLabel = sample.error ? "Error" : sample.is_correct ? "Correct" : "Incorrect";
   const predictedAnswer = sample.parsed_prediction || sample.response_text || "No response";
   const extraEntries = Object.entries(sample).filter(([key]) => !SAMPLE_BASE_FIELDS.has(key));
-  const promptTemplate = [sample.prompt_template_id, sample.prompt_template_version ? `v${sample.prompt_template_version}` : ""].filter(Boolean).join(" ");
 
   return (
     <article className="sample-card">
@@ -157,12 +154,9 @@ export function SampleCard({ sample }: { sample: SampleRecord }) {
       <p className="sample-card__response">{truncateText(sample.response_text ?? sample.prompt ?? "No visible response.", 260)}</p>
 
       <div className="sample-card__signals">
-        {sample.prediction_valid === false ? <SignalPill tone="bad">Parser miss</SignalPill> : null}
-        {sample.prediction_valid === true ? <SignalPill tone="good">Parsed answer</SignalPill> : null}
         {sample.used_raw_fallback ? <SignalPill tone="warn">Raw fallback used</SignalPill> : null}
         {!sample.used_raw_fallback && sample.raw_fallback_attempted ? <SignalPill tone="warn">Fallback tried</SignalPill> : null}
         <SignalPill tone="neutral">{formatNumber(sample.total_tokens)} tok</SignalPill>
-        <SignalPill tone="neutral">Sample {formatHash(sample.export_sample_id ?? sample.sample_id, 18)}</SignalPill>
       </div>
 
       <details className="sample-card__details">
@@ -175,12 +169,6 @@ export function SampleCard({ sample }: { sample: SampleRecord }) {
         </div>
 
         <div className="info-grid">
-          <InfoBlock title="Sample ID" value={sample.export_sample_id ?? sample.sample_id ?? "-"} />
-          <InfoBlock title="Input SHA-256" value={formatHash(sample.sample_input_sha256)} />
-          <InfoBlock title="Prompt SHA-256" value={formatHash(sample.prompt_sha256)} />
-          <InfoBlock title="Template" value={promptTemplate || "-"} />
-          <InfoBlock title="Template SHA-256" value={formatHash(sample.prompt_template_sha256)} />
-          <InfoBlock title="Prediction valid" value={sample.prediction_valid === undefined ? "-" : String(sample.prediction_valid)} />
           <InfoBlock title="Started" value={formatDate(sample.started_at)} />
           <InfoBlock title="Ended" value={formatDate(sample.ended_at)} />
           <InfoBlock title="Load" value={formatDuration(sample.load_duration_sec)} />

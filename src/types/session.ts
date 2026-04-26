@@ -15,23 +15,12 @@ export interface BenchmarkCatalogEntry {
 
 export interface BenchmarkMetricSummary {
   accuracy?: number;
-  accuracy_ci95_low?: number;
-  accuracy_ci95_high?: number;
   sample_count?: number;
   correct_count?: number;
   success_count?: number;
   success_rate?: number;
-  success_rate_ci95_low?: number;
-  success_rate_ci95_high?: number;
   responded_count?: number;
   response_rate?: number;
-  response_rate_ci95_low?: number;
-  response_rate_ci95_high?: number;
-  valid_prediction_count?: number;
-  invalid_prediction_count?: number;
-  invalid_prediction_rate?: number;
-  invalid_prediction_rate_ci95_low?: number;
-  invalid_prediction_rate_ci95_high?: number;
   raw_fallback_count?: number;
   raw_fallback_rate?: number;
   raw_fallback_attempted_count?: number;
@@ -94,11 +83,7 @@ export interface LeaderboardRow {
   model_type?: string;
   family?: string;
   quantization?: string;
-  digest?: string;
-  modified_at?: string;
   overall_accuracy?: number;
-  overall_accuracy_ci95_low?: number;
-  overall_accuracy_ci95_high?: number;
   success_rate?: number;
   response_rate?: number;
   benchmarks_run?: number;
@@ -106,11 +91,6 @@ export interface LeaderboardRow {
   correct_count?: number;
   success_count?: number;
   responded_count?: number;
-  valid_prediction_count?: number;
-  invalid_prediction_count?: number;
-  invalid_prediction_rate?: number;
-  invalid_prediction_rate_ci95_low?: number;
-  invalid_prediction_rate_ci95_high?: number;
   error_count?: number;
   raw_fallback_count?: number;
   raw_fallback_rate?: number;
@@ -143,20 +123,11 @@ export interface EvaluationModelInfo {
   model_type?: string;
   family?: string;
   quantization?: string;
-  digest?: string;
-  modified_at?: string;
   [key: string]: unknown;
-}
-
-export interface PromptTemplateInfo {
-  prompt_template_id?: string;
-  prompt_template_version?: string;
-  prompt_template_sha256?: string;
 }
 
 export interface EvaluationSample {
   sample_id?: string;
-  export_sample_id?: string;
   evaluation_id?: string;
   run_id?: string;
   benchmark_name?: string;
@@ -164,15 +135,9 @@ export interface EvaluationSample {
   model_name?: string;
   provider?: string;
   prompt?: string;
-  prompt_sha256?: string;
-  prompt_template_id?: string;
-  prompt_template_version?: string;
-  prompt_template_sha256?: string;
-  sample_input_sha256?: string;
   response_text?: string;
   expected_answer?: string;
   parsed_prediction?: string;
-  prediction_valid?: boolean;
   is_correct?: boolean;
   used_raw_fallback?: boolean;
   raw_fallback_attempted?: boolean;
@@ -188,8 +153,6 @@ export interface EvaluationSample {
   completion_tokens?: number;
   total_tokens?: number;
   tokens_per_second?: number;
-  eval_tokens_per_second?: number;
-  prompt_tokens_per_second?: number;
   prompt_chars?: number;
   response_chars?: number;
   expected_answer_chars?: number;
@@ -204,7 +167,6 @@ export interface EvaluationBrief {
   benchmark_display_name?: string;
   description?: string;
   dataset?: Record<string, unknown>;
-  prompt?: PromptTemplateInfo;
   model?: EvaluationModelInfo;
   metrics?: BenchmarkMetricSummary;
   status?: string;
@@ -240,7 +202,6 @@ export interface SessionSummary {
   run_id?: string;
   generated_at?: string;
   manifest_path?: string;
-  run_card_path?: string;
   totals?: Record<string, number>;
 }
 

@@ -3,7 +3,6 @@ import type { BenchmarkSession, EvaluationSample, LeaderboardRow } from "./types
 export const SAMPLE_PAGE_SIZE = 8;
 export const SAMPLE_BASE_FIELDS = new Set([
   "sample_id",
-  "export_sample_id",
   "evaluation_id",
   "run_id",
   "benchmark_name",
@@ -11,15 +10,9 @@ export const SAMPLE_BASE_FIELDS = new Set([
   "model_name",
   "provider",
   "prompt",
-  "prompt_sha256",
-  "prompt_template_id",
-  "prompt_template_version",
-  "prompt_template_sha256",
-  "sample_input_sha256",
   "response_text",
   "expected_answer",
   "parsed_prediction",
-  "prediction_valid",
   "is_correct",
   "used_raw_fallback",
   "raw_fallback_attempted",
@@ -35,8 +28,6 @@ export const SAMPLE_BASE_FIELDS = new Set([
   "completion_tokens",
   "total_tokens",
   "tokens_per_second",
-  "eval_tokens_per_second",
-  "prompt_tokens_per_second",
   "prompt_chars",
   "response_chars",
   "expected_answer_chars",
@@ -67,13 +58,8 @@ export type ModelInsight = {
   shortName: string;
   provider: string;
   accuracy: number;
-  accuracyCiLow: number | null;
-  accuracyCiHigh: number | null;
   latency: number;
   fallback: number;
-  invalid: number;
-  invalidCiLow: number | null;
-  invalidCiHigh: number | null;
   responseRate: number;
   tokens: number;
   cleanlinessScore: number;
@@ -84,11 +70,8 @@ export type ModelInsight = {
     key: string;
     label: string;
     accuracy: number;
-    accuracyCiLow: number | null;
-    accuracyCiHigh: number | null;
     latency: number;
     fallbackRate: number;
-    invalidRate: number;
   }>;
 };
 
@@ -121,16 +104,11 @@ export function buildModelInsights(rows: LeaderboardRow[], benchmarkOptions: Ben
 
   return rows.map((row) => {
     const accuracy = ratioNumber(row.overall_accuracy);
-    const accuracyCiLow = maybeRatioNumber(row.overall_accuracy_ci95_low);
-    const accuracyCiHigh = maybeRatioNumber(row.overall_accuracy_ci95_high);
     const latency = toNumber(row.avg_latency_sec);
     const fallback = ratioNumber(row.raw_fallback_rate);
-    const invalid = ratioNumber(row.invalid_prediction_rate);
-    const invalidCiLow = maybeRatioNumber(row.invalid_prediction_rate_ci95_low);
-    const invalidCiHigh = maybeRatioNumber(row.invalid_prediction_rate_ci95_high);
     const responseRate = ratioNumber(row.response_rate);
     const tokens = toNumber(row.total_tokens);
-    const cleanlinessScore = 1 - clamp01(fallback * 0.55 + invalid * 0.45);
+    const cleanlinessScore = 1 - fallback;
     const latencyScore = inverseNormalize(latency, minLatency, maxLatency);
     const tokenScore = inverseNormalize(tokens, minTokens, maxTokens);
     const speedScore = latencyScore * 0.55 + cleanlinessScore * 0.15 + responseRate * 0.15 + accuracy * 0.15;
@@ -143,13 +121,8 @@ export function buildModelInsights(rows: LeaderboardRow[], benchmarkOptions: Ben
       shortName: shortModelName(row.model_name),
       provider: String(row.provider ?? "unknown provider"),
       accuracy,
-      accuracyCiLow,
-      accuracyCiHigh,
       latency,
       fallback,
-      invalid,
-      invalidCiLow,
-      invalidCiHigh,
       responseRate,
       tokens,
       cleanlinessScore,
@@ -162,11 +135,8 @@ export function buildModelInsights(rows: LeaderboardRow[], benchmarkOptions: Ben
           key: benchmark.key,
           label: benchmark.label,
           accuracy: ratioNumber(cell?.accuracy),
-          accuracyCiLow: maybeRatioNumber(cell?.accuracy_ci95_low),
-          accuracyCiHigh: maybeRatioNumber(cell?.accuracy_ci95_high),
           latency: toNumber(cell?.avg_latency_sec),
           fallbackRate: ratioNumber(cell?.raw_fallback_rate),
-          invalidRate: ratioNumber(cell?.invalid_prediction_rate),
         };
       }),
     };
@@ -202,22 +172,10 @@ export function getBenchmarkFallback(model: ModelInsight | null, benchmarkKey: s
   return model?.displayBenchmarks.find((benchmark) => benchmark.key === benchmarkKey)?.fallbackRate ?? 0;
 }
 
-export function getBenchmarkInvalid(model: ModelInsight | null, benchmarkKey: string): number {
-  return model?.displayBenchmarks.find((benchmark) => benchmark.key === benchmarkKey)?.invalidRate ?? 0;
-}
-
-export function getBenchmarkAccuracyCi(model: ModelInsight | null, benchmarkKey: string): [number | null, number | null] {
-  const benchmark = model?.displayBenchmarks.find((item) => item.key === benchmarkKey);
-  return [benchmark?.accuracyCiLow ?? null, benchmark?.accuracyCiHigh ?? null];
-}
-
 export function samplePriority(sample: SampleRecord): number {
   let score = toNumber(sample.total_tokens) / 1000 + toNumber(sample.latency_sec);
   if (sample.error) {
     score += 10;
-  }
-  if (sample.prediction_valid === false) {
-    score += 8;
   }
   if (sample.is_correct === false) {
     score += 6;
@@ -290,10 +248,6 @@ export function ratioNumber(value: unknown): number {
   return number > 1 ? Math.min(number / 100, 1) : Math.min(number, 1);
 }
 
-export function maybeRatioNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? ratioNumber(value) : null;
-}
-
 export function percentNumber(value: unknown): number {
   return ratioNumber(value) * 100;
 }
@@ -311,27 +265,6 @@ export function clamp01(value: number): number {
 
 export function formatPercent(value: unknown): string {
   return `${percentNumber(value).toFixed(1)}%`;
-}
-
-export function formatOptionalPercent(value: unknown): string {
-  return maybeRatioNumber(value) === null ? "-" : formatPercent(value);
-}
-
-export function formatConfidenceRange(low: unknown, high: unknown): string {
-  const lowRatio = maybeRatioNumber(low);
-  const highRatio = maybeRatioNumber(high);
-  if (lowRatio === null || highRatio === null) {
-    return "-";
-  }
-  return `${formatPercent(lowRatio)} to ${formatPercent(highRatio)}`;
-}
-
-export function formatHash(value: unknown, length = 12): string {
-  if (typeof value !== "string" || !value.trim()) {
-    return "-";
-  }
-  const trimmed = value.trim();
-  return trimmed.length <= length ? trimmed : `${trimmed.slice(0, length)}...`;
 }
 
 export function formatScore(value: unknown): string {
