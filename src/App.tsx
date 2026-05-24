@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useState, type ChangeEvent, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -15,18 +15,6 @@ import {
   Upload,
   Zap,
 } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Scatter,
-  ScatterChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
 import { useEvaluationData } from "./hooks/useEvaluationData";
 import type {
   BenchmarkSession,
@@ -36,7 +24,8 @@ import type {
   ModelBundle,
 } from "./types/session";
 
-const SAMPLE_PAGE_SIZE = 120;
+const SAMPLE_PAGE_SIZE = 40;
+const EVALUATION_PAGE_SIZE = 30;
 const SAMPLE_BASE_FIELDS = new Set([
   "sample_id",
   "evaluation_id",
@@ -71,10 +60,26 @@ const SAMPLE_BASE_FIELDS = new Set([
   "raw_provider_metrics",
 ]);
 
-type SampleRecord = EvaluationSample & {
+type SampleRecord = {
+  sample: EvaluationSample;
   displayModelName: string;
   displayBenchmarkName: string;
+  sampleKey: string;
 };
+
+interface PerformanceDatum {
+  model: string;
+  fullModel: string;
+  accuracy: number;
+  latency: number;
+  tokens: number;
+  throughput: number;
+}
+
+const EMPTY_LEADERBOARD: LeaderboardRow[] = [];
+const EMPTY_MODELS: ModelBundle[] = [];
+const EMPTY_EVALUATIONS: EvaluationRecord[] = [];
+const NUMBER_FORMATTER = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
 
 function App() {
   const { session, source, isLoading, error, importFile, reloadSynced } = useEvaluationData();
@@ -88,76 +93,75 @@ function App() {
   const deferredSampleSearch = useDeferredValue(sampleSearch.trim().toLowerCase());
   const deferredLeaderboardSearch = useDeferredValue(leaderboardSearch.trim().toLowerCase());
 
-  const leaderboard = session?.leaderboard ?? [];
-  const models = session?.models ?? [];
-  const evaluations = session?.evaluations ?? [];
+  const leaderboard = session?.leaderboard ?? EMPTY_LEADERBOARD;
+  const models = session?.models ?? EMPTY_MODELS;
+  const evaluations = session?.evaluations ?? EMPTY_EVALUATIONS;
 
-  const modelOptions = Array.from(new Set(leaderboard.map((row) => row.model_name))).sort();
-  const benchmarkOptions = Array.from(
-    new Set(
-      (session?.catalog?.selected_benchmarks ?? []).map((entry) => entry.key).filter((value): value is string => Boolean(value)),
-    ),
-  );
-  if (benchmarkOptions.length === 0) {
-    const fallbackBenchmarks = Array.from(
+  const modelOptions = useMemo(() => Array.from(new Set(leaderboard.map((row) => row.model_name))).sort(), [leaderboard]);
+
+  const benchmarkOptions = useMemo(() => {
+    const selectedBenchmarks = Array.from(
+      new Set(
+        (session?.catalog?.selected_benchmarks ?? []).map((entry) => entry.key).filter((value): value is string => Boolean(value)),
+      ),
+    );
+    if (selectedBenchmarks.length > 0) {
+      return selectedBenchmarks;
+    }
+
+    return Array.from(
       new Set(evaluations.map((evaluation) => evaluation.benchmark_name).filter((value): value is string => Boolean(value))),
     ).sort();
-    benchmarkOptions.push(...fallbackBenchmarks);
-  }
+  }, [evaluations, session?.catalog?.selected_benchmarks]);
 
-  const filteredLeaderboard = leaderboard.filter((row) => {
+  const filteredLeaderboard = useMemo(() => leaderboard.filter((row) => {
     if (!deferredLeaderboardSearch) {
       return true;
     }
     return row.model_name.toLowerCase().includes(deferredLeaderboardSearch);
-  });
+  }), [deferredLeaderboardSearch, leaderboard]);
 
-  const sampleRecords: SampleRecord[] = evaluations.flatMap((evaluation) =>
-    evaluation.samples.map((sample) => ({
-      ...sample,
-      displayModelName: sample.model_name ?? evaluation.model.name,
-      displayBenchmarkName: sample.benchmark_name ?? evaluation.benchmark_name,
-    })),
+  const sampleRecords: SampleRecord[] = useMemo(
+    () =>
+      evaluations.flatMap((evaluation) =>
+        evaluation.samples.map((sample) => {
+          const displayModelName = sample.model_name ?? evaluation.model.name;
+          const displayBenchmarkName = sample.benchmark_name ?? evaluation.benchmark_name;
+          return {
+            sample,
+            displayModelName,
+            displayBenchmarkName,
+            sampleKey: sample.sample_id ?? `${displayModelName}-${displayBenchmarkName}-${sample.sample_index}`,
+          };
+        }),
+      ),
+    [evaluations],
   );
 
-  const filteredSamples = sampleRecords.filter((sample) => {
+  const filteredSamples = useMemo(() => sampleRecords.filter((sample) => {
     if (selectedModel !== "all" && sample.displayModelName !== selectedModel) {
       return false;
     }
     if (selectedBenchmark !== "all" && sample.displayBenchmarkName !== selectedBenchmark) {
       return false;
     }
-    if (correctnessFilter === "correct" && sample.is_correct !== true) {
+    if (correctnessFilter === "correct" && sample.sample.is_correct !== true) {
       return false;
     }
-    if (correctnessFilter === "incorrect" && sample.is_correct !== false) {
+    if (correctnessFilter === "incorrect" && sample.sample.is_correct !== false) {
       return false;
     }
-    if (correctnessFilter === "errors" && !sample.error) {
+    if (correctnessFilter === "errors" && !sample.sample.error) {
       return false;
     }
     if (!deferredSampleSearch) {
       return true;
     }
 
-    const searchableText = [
-      sample.displayModelName,
-      sample.displayBenchmarkName,
-      sample.prompt,
-      sample.response_text,
-      sample.expected_answer,
-      sample.parsed_prediction,
-      sample.error,
-      typeof sample.question === "string" ? sample.question : "",
-      typeof sample.problem === "string" ? sample.problem : "",
-    ]
-      .join(" ")
-      .toLowerCase();
+    return sampleContainsText(sample, deferredSampleSearch);
+  }), [correctnessFilter, deferredSampleSearch, sampleRecords, selectedBenchmark, selectedModel]);
 
-    return searchableText.includes(deferredSampleSearch);
-  });
-
-  const displayedSamples = filteredSamples.slice(0, visibleSamples);
+  const displayedSamples = useMemo(() => filteredSamples.slice(0, visibleSamples), [filteredSamples, visibleSamples]);
 
   useEffect(() => {
     setVisibleSamples(SAMPLE_PAGE_SIZE);
@@ -290,6 +294,36 @@ function App() {
   );
 }
 
+function sampleContainsText(sample: SampleRecord, search: string): boolean {
+  const source = sample.sample;
+  return (
+    textIncludes(sample.displayModelName, search) ||
+    textIncludes(sample.displayBenchmarkName, search) ||
+    textIncludes(source.prompt, search) ||
+    textIncludes(source.response_text, search) ||
+    textIncludes(source.expected_answer, search) ||
+    textIncludes(source.parsed_prediction, search) ||
+    textIncludes(source.error, search) ||
+    textIncludes(source.question, search) ||
+    textIncludes(source.problem, search)
+  );
+}
+
+function textIncludes(value: unknown, search: string): boolean {
+  return typeof value === "string" && value.toLowerCase().includes(search);
+}
+
+function LazyDetails({ renderContent, summary }: { renderContent: () => ReactNode; summary: ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <details className="terminal-details" onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+      <summary>{summary}</summary>
+      {isOpen ? renderContent() : null}
+    </details>
+  );
+}
+
 function LoadingState() {
   return (
     <section className="panel panel--centered">
@@ -381,7 +415,7 @@ function OverviewPanel({ session, sourceLabel }: { session: BenchmarkSession; so
 }
 
 function PerformancePanel({ models }: { models: ModelBundle[] }) {
-  const scatterData = models.map((model) => {
+  const scatterData = useMemo(() => models.map((model) => {
     const row = model.leaderboard;
     const benchmarkCells = Object.values(row.benchmarks ?? {});
     const validTps = benchmarkCells
@@ -397,9 +431,9 @@ function PerformancePanel({ models }: { models: ModelBundle[] }) {
       tokens: toNumber(row.total_tokens),
       throughput: avgTps,
     };
-  });
+  }), [models]);
 
-  const throughputData = [...scatterData].sort((left, right) => right.throughput - left.throughput);
+  const throughputData = useMemo(() => [...scatterData].sort((left, right) => right.throughput - left.throughput), [scatterData]);
 
   return (
     <section className="section-grid">
@@ -409,41 +443,7 @@ function PerformancePanel({ models }: { models: ModelBundle[] }) {
           <h2>Accuracy vs latency</h2>
         </div>
         <div className="chart-wrap">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 20, right: 12, bottom: 20, left: 12 }}>
-              <CartesianGrid stroke="rgba(120, 173, 145, 0.18)" />
-              <XAxis
-                dataKey="accuracy"
-                domain={[0, 100]}
-                name="Accuracy"
-                stroke="#8db49d"
-                tick={{ fill: "#8db49d", fontSize: 11 }}
-                unit="%"
-              />
-              <YAxis
-                dataKey="latency"
-                name="Latency"
-                stroke="#8db49d"
-                tick={{ fill: "#8db49d", fontSize: 11 }}
-                unit="s"
-              />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                cursor={{ stroke: "rgba(93, 223, 149, 0.35)" }}
-                formatter={(value: number, name: string) => {
-                  if (name === "accuracy") {
-                    return [`${value.toFixed(1)}%`, "Accuracy"];
-                  }
-                  if (name === "latency") {
-                    return [`${value.toFixed(2)}s`, "Avg latency"];
-                  }
-                  return [String(value), name];
-                }}
-                labelFormatter={(_label, payload) => String(payload?.[0]?.payload?.fullModel ?? "")}
-              />
-              <Scatter data={scatterData} dataKey="latency" fill="#5de095" />
-            </ScatterChart>
-          </ResponsiveContainer>
+          <AccuracyLatencyChart data={scatterData} />
         </div>
       </div>
 
@@ -453,28 +453,120 @@ function PerformancePanel({ models }: { models: ModelBundle[] }) {
           <h2>Average throughput</h2>
         </div>
         <div className="chart-wrap">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={throughputData} layout="vertical" margin={{ top: 10, right: 18, bottom: 10, left: 18 }}>
-              <CartesianGrid horizontal={false} stroke="rgba(120, 173, 145, 0.18)" />
-              <XAxis dataKey="throughput" stroke="#8db49d" tick={{ fill: "#8db49d", fontSize: 11 }} unit=" tok/s" type="number" />
-              <YAxis
-                dataKey="model"
-                stroke="#8db49d"
-                tick={{ fill: "#8db49d", fontSize: 11 }}
-                type="category"
-                width={94}
-              />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                formatter={(value: number) => [`${value.toFixed(2)} tok/s`, "Avg throughput"]}
-                labelFormatter={(_label, payload) => String(payload?.[0]?.payload?.fullModel ?? "")}
-              />
-              <Bar dataKey="throughput" fill="#d6b05d" radius={[0, 2, 2, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <ThroughputChart data={throughputData} />
         </div>
       </div>
     </section>
+  );
+}
+
+function AccuracyLatencyChart({ data }: { data: PerformanceDatum[] }) {
+  const width = 640;
+  const height = 300;
+  const margin = { top: 18, right: 22, bottom: 42, left: 58 };
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+  const maxLatency = Math.max(1, ...data.map((point) => point.latency));
+  const yMax = Math.ceil(maxLatency * 1.1 * 10) / 10;
+  const xTicks = [0, 25, 50, 75, 100];
+  const yTicks = Array.from({ length: 5 }, (_value, index) => (yMax * index) / 4);
+  const xForAccuracy = (accuracy: number) => margin.left + (Math.max(0, Math.min(100, accuracy)) / 100) * innerWidth;
+  const yForLatency = (latency: number) => margin.top + innerHeight - (Math.max(0, latency) / yMax) * innerHeight;
+
+  return (
+    <svg aria-label="Accuracy vs latency scatter chart" className="chart-svg" role="img" viewBox={`0 0 ${width} ${height}`}>
+      {xTicks.map((tick) => {
+        const x = xForAccuracy(tick);
+        return (
+          <g key={tick}>
+            <line className="chart-grid-line" x1={x} x2={x} y1={margin.top} y2={margin.top + innerHeight} />
+            <text className="chart-label" textAnchor="middle" x={x} y={height - 14}>
+              {tick}%
+            </text>
+          </g>
+        );
+      })}
+      {yTicks.map((tick) => {
+        const y = yForLatency(tick);
+        return (
+          <g key={tick.toFixed(3)}>
+            <line className="chart-grid-line" x1={margin.left} x2={margin.left + innerWidth} y1={y} y2={y} />
+            <text className="chart-label" textAnchor="end" x={margin.left - 10} y={y + 4}>
+              {tick.toFixed(tick >= 10 ? 0 : 1)}s
+            </text>
+          </g>
+        );
+      })}
+      <line className="chart-axis-line" x1={margin.left} x2={margin.left + innerWidth} y1={margin.top + innerHeight} y2={margin.top + innerHeight} />
+      <line className="chart-axis-line" x1={margin.left} x2={margin.left} y1={margin.top} y2={margin.top + innerHeight} />
+      <text className="chart-axis-title" textAnchor="middle" x={margin.left + innerWidth / 2} y={height - 2}>
+        Accuracy
+      </text>
+      <text className="chart-axis-title" textAnchor="middle" transform={`translate(13 ${margin.top + innerHeight / 2}) rotate(-90)`}>
+        Avg latency
+      </text>
+      {data.map((point) => (
+        <circle
+          className="chart-mark"
+          cx={xForAccuracy(point.accuracy)}
+          cy={yForLatency(point.latency)}
+          key={point.fullModel}
+          r={5}
+        >
+          <title>{`${point.fullModel}\nAccuracy: ${point.accuracy.toFixed(1)}%\nAvg latency: ${point.latency.toFixed(2)}s\nTokens: ${formatNumber(point.tokens)}`}</title>
+        </circle>
+      ))}
+    </svg>
+  );
+}
+
+function ThroughputChart({ data }: { data: PerformanceDatum[] }) {
+  const width = 640;
+  const height = 300;
+  const margin = { top: 12, right: 58, bottom: 34, left: 140 };
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+  const maxThroughput = Math.max(1, ...data.map((point) => point.throughput));
+  const xTicks = Array.from({ length: 5 }, (_value, index) => (maxThroughput * index) / 4);
+  const rowHeight = innerHeight / Math.max(1, data.length);
+  const barHeight = Math.min(18, Math.max(8, rowHeight * 0.56));
+  const xForValue = (value: number) => margin.left + (Math.max(0, value) / maxThroughput) * innerWidth;
+
+  return (
+    <svg aria-label="Average throughput bar chart" className="chart-svg" role="img" viewBox={`0 0 ${width} ${height}`}>
+      {xTicks.map((tick) => {
+        const x = xForValue(tick);
+        return (
+          <g key={tick.toFixed(3)}>
+            <line className="chart-grid-line" x1={x} x2={x} y1={margin.top} y2={margin.top + innerHeight} />
+            <text className="chart-label" textAnchor="middle" x={x} y={height - 12}>
+              {tick.toFixed(tick >= 10 ? 0 : 1)}
+            </text>
+          </g>
+        );
+      })}
+      <line className="chart-axis-line" x1={margin.left} x2={margin.left + innerWidth} y1={margin.top + innerHeight} y2={margin.top + innerHeight} />
+      <text className="chart-axis-title" textAnchor="middle" x={margin.left + innerWidth / 2} y={height - 1}>
+        tok/s
+      </text>
+      {data.map((point, index) => {
+        const y = margin.top + index * rowHeight + (rowHeight - barHeight) / 2;
+        const barWidth = Math.max(1, xForValue(point.throughput) - margin.left);
+        return (
+          <g key={point.fullModel}>
+            <text className="chart-label chart-label--model" textAnchor="end" x={margin.left - 10} y={y + barHeight * 0.72}>
+              {point.model}
+            </text>
+            <rect className="chart-bar" height={barHeight} rx={2} width={barWidth} x={margin.left} y={y}>
+              <title>{`${point.fullModel}\nAvg throughput: ${point.throughput.toFixed(2)} tok/s\nAccuracy: ${point.accuracy.toFixed(1)}%`}</title>
+            </rect>
+            <text className="chart-value" x={margin.left + barWidth + 8} y={y + barHeight * 0.72}>
+              {point.throughput.toFixed(1)}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -621,11 +713,20 @@ function BenchmarkMatrix({ benchmarkNames, rows }: { benchmarkNames: string[]; r
 }
 
 function EvaluationExplorer({ evaluations }: { evaluations: EvaluationRecord[] }) {
-  const sortedEvaluations = [...evaluations].sort((left, right) => {
+  const [visibleEvaluations, setVisibleEvaluations] = useState(EVALUATION_PAGE_SIZE);
+  const sortedEvaluations = useMemo(() => [...evaluations].sort((left, right) => {
     const leftKey = `${left.benchmark_name}:${left.model.name}`;
     const rightKey = `${right.benchmark_name}:${right.model.name}`;
     return leftKey.localeCompare(rightKey);
-  });
+  }), [evaluations]);
+  const displayedEvaluations = useMemo(
+    () => sortedEvaluations.slice(0, visibleEvaluations),
+    [sortedEvaluations, visibleEvaluations],
+  );
+
+  useEffect(() => {
+    setVisibleEvaluations(EVALUATION_PAGE_SIZE);
+  }, [evaluations]);
 
   return (
     <section className="panel">
@@ -634,11 +735,13 @@ function EvaluationExplorer({ evaluations }: { evaluations: EvaluationRecord[] }
         <h2>Evaluation explorer</h2>
       </div>
       <div className="details-list">
-        {sortedEvaluations.map((evaluation) => {
+        {displayedEvaluations.map((evaluation) => {
           const metrics = evaluation.metrics ?? {};
           return (
-            <details className="terminal-details" key={evaluation.evaluation_id}>
-              <summary>
+            <LazyDetails
+              key={evaluation.evaluation_id}
+              summary={
+                <>
                 <div>
                   <div className="summary-title">
                     {evaluation.benchmark_display_name ?? evaluation.benchmark_name} · {evaluation.model.name}
@@ -654,47 +757,59 @@ function EvaluationExplorer({ evaluations }: { evaluations: EvaluationRecord[] }
                   <CompliancePill rate={metrics.raw_fallback_rate} />
                   <span className={evaluation.status === "completed" ? "status-ok" : "status-bad"}>{evaluation.status ?? "unknown"}</span>
                 </div>
-              </summary>
-              <div className="detail-grid">
-                <InfoBlock title="Description" value={evaluation.description ?? "No description recorded."} />
-                <InfoBlock title="Artifact id" value={evaluation.evaluation_id} />
-                <InfoBlock title="Prompt tokens" value={formatNumber(metrics.total_prompt_tokens)} />
-                <InfoBlock title="Completion tokens" value={formatNumber(metrics.total_completion_tokens)} />
-                <InfoBlock title="Avg prompt eval" value={formatDuration(metrics.avg_prompt_eval_duration_sec)} />
-                <InfoBlock title="Avg eval" value={formatDuration(metrics.avg_eval_duration_sec)} />
-                <InfoBlock title="Avg load" value={formatDuration(metrics.avg_load_duration_sec)} />
-                <InfoBlock title="Success rate" value={formatPercent(metrics.success_rate)} />
-                <InfoBlock title="Response rate" value={formatPercent(metrics.response_rate)} />
-                <InfoBlock title="Raw fallback" value={formatPercent(metrics.raw_fallback_rate)} />
-                <InfoBlock title="Fallback attempts" value={formatPercent(metrics.raw_fallback_attempted_rate)} />
-                <InfoBlock title="Avg throughput" value={`${toNumber(metrics.avg_tokens_per_second).toFixed(2)} tok/s`} />
-                <InfoBlock title="Embedded samples" value={formatNumber(evaluation.sample_count_embedded)} />
-              </div>
-              {toNumber(metrics.raw_fallback_rate) >= 0.25 ? (
-                <p className="detail-note">
-                  This evaluation relied on raw fallback parsing for {formatPercent(metrics.raw_fallback_rate)} of samples, so the
-                  score blends task performance with answer-format compliance.
-                </p>
-              ) : null}
-              {evaluation.error ? <p className="status-bad detail-error">{evaluation.error}</p> : null}
-              <div className="sample-panels">
-                <TextBlock title="Dataset metadata" value={evaluation.dataset} />
-                <TextBlock title="Model metadata" value={evaluation.model} />
-                <TextBlock title="Metric summary" value={evaluation.metrics} />
-                <TextBlock title="Full evaluation JSON" value={evaluation} />
-              </div>
-              <div className="artifact-list">
-                {Object.entries(evaluation.artifact_paths ?? {}).map(([key, value]) => (
-                  <div className="artifact-item" key={key}>
-                    <span>{key}</span>
-                    <code>{value}</code>
+                </>
+              }
+              renderContent={() => (
+                <>
+                  <div className="detail-grid">
+                    <InfoBlock title="Description" value={evaluation.description ?? "No description recorded."} />
+                    <InfoBlock title="Artifact id" value={evaluation.evaluation_id} />
+                    <InfoBlock title="Prompt tokens" value={formatNumber(metrics.total_prompt_tokens)} />
+                    <InfoBlock title="Completion tokens" value={formatNumber(metrics.total_completion_tokens)} />
+                    <InfoBlock title="Avg prompt eval" value={formatDuration(metrics.avg_prompt_eval_duration_sec)} />
+                    <InfoBlock title="Avg eval" value={formatDuration(metrics.avg_eval_duration_sec)} />
+                    <InfoBlock title="Avg load" value={formatDuration(metrics.avg_load_duration_sec)} />
+                    <InfoBlock title="Success rate" value={formatPercent(metrics.success_rate)} />
+                    <InfoBlock title="Response rate" value={formatPercent(metrics.response_rate)} />
+                    <InfoBlock title="Raw fallback" value={formatPercent(metrics.raw_fallback_rate)} />
+                    <InfoBlock title="Fallback attempts" value={formatPercent(metrics.raw_fallback_attempted_rate)} />
+                    <InfoBlock title="Avg throughput" value={`${toNumber(metrics.avg_tokens_per_second).toFixed(2)} tok/s`} />
+                    <InfoBlock title="Embedded samples" value={formatNumber(evaluation.sample_count_embedded)} />
                   </div>
-                ))}
-              </div>
-            </details>
+                  {toNumber(metrics.raw_fallback_rate) >= 0.25 ? (
+                    <p className="detail-note">
+                      This evaluation relied on raw fallback parsing for {formatPercent(metrics.raw_fallback_rate)} of samples, so the
+                      score blends task performance with answer-format compliance.
+                    </p>
+                  ) : null}
+                  {evaluation.error ? <p className="status-bad detail-error">{evaluation.error}</p> : null}
+                  <div className="sample-panels">
+                    <TextBlock title="Dataset metadata" value={evaluation.dataset} />
+                    <TextBlock title="Model metadata" value={evaluation.model} />
+                    <TextBlock title="Metric summary" value={evaluation.metrics} />
+                    <TextBlock title="Full evaluation JSON" value={evaluation} />
+                  </div>
+                  <div className="artifact-list">
+                    {Object.entries(evaluation.artifact_paths ?? {}).map(([key, value]) => (
+                      <div className="artifact-item" key={key}>
+                        <span>{key}</span>
+                        <code>{value}</code>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            />
           );
         })}
       </div>
+      {visibleEvaluations < sortedEvaluations.length ? (
+        <div className="load-more-row">
+          <button className="terminal-button" onClick={() => setVisibleEvaluations((count) => count + EVALUATION_PAGE_SIZE)} type="button">
+            Load {Math.min(EVALUATION_PAGE_SIZE, sortedEvaluations.length - visibleEvaluations)} more evaluations
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -781,84 +896,89 @@ function SampleExplorer({
       </div>
 
       <div className="details-list">
-        {displayedSamples.map((sample) => {
-          const extraEntries = Object.entries(sample).filter(([key]) => !SAMPLE_BASE_FIELDS.has(key));
+        {displayedSamples.map((record) => {
+          const sample = record.sample;
           const statusClass = sample.error ? "status-bad" : sample.is_correct ? "status-ok" : "status-warn";
           const statusLabel = sample.error ? "error" : sample.is_correct ? "correct" : "incorrect";
 
           return (
-            <details className="terminal-details" key={sample.sample_id ?? `${sample.displayModelName}-${sample.displayBenchmarkName}-${sample.sample_index}`}>
-              <summary>
-                <div>
-                  <div className="summary-title">
-                    {sample.displayBenchmarkName} · {sample.displayModelName} · sample #{sample.sample_index ?? 0}
-                  </div>
-                  <div className="summary-subtitle">
-                    {typeof sample.question === "string"
-                      ? sample.question
-                      : typeof sample.problem === "string"
-                        ? sample.problem
-                        : "Open the record to inspect prompt, response, and metadata."}
-                  </div>
-                </div>
-                <div className="summary-metrics">
-                  <span className={statusClass}>{statusLabel}</span>
-                  {sample.used_raw_fallback ? <span className="status-warn">raw fallback</span> : null}
-                  {!sample.used_raw_fallback && sample.raw_fallback_attempted ? <span className="status-warn">fallback tried</span> : null}
-                  <span>{formatDuration(sample.latency_sec)}</span>
-                  <span>{formatNumber(sample.total_tokens)} tok</span>
-                </div>
-              </summary>
-
-              <div className="sample-panels">
-                <TextBlock title="Prompt" value={sample.prompt} />
-                <TextBlock title="Response" value={sample.response_text} />
-                <TextBlock title="Expected answer" value={sample.expected_answer} />
-                <TextBlock title="Parsed prediction" value={sample.parsed_prediction} />
-              </div>
-
-              <div className="detail-grid">
-                <InfoBlock title="Started" value={formatDate(sample.started_at)} />
-                <InfoBlock title="Ended" value={formatDate(sample.ended_at)} />
-                <InfoBlock title="Latency" value={formatDuration(sample.latency_sec)} />
-                <InfoBlock title="Total duration" value={formatDuration(sample.total_duration_sec)} />
-                <InfoBlock title="Load duration" value={formatDuration(sample.load_duration_sec)} />
-                <InfoBlock title="Prompt eval" value={formatDuration(sample.prompt_eval_duration_sec)} />
-                <InfoBlock title="Eval duration" value={formatDuration(sample.eval_duration_sec)} />
-                <InfoBlock title="Prompt tokens" value={formatNumber(sample.prompt_tokens)} />
-                <InfoBlock title="Completion tokens" value={formatNumber(sample.completion_tokens)} />
-                <InfoBlock title="Prompt chars" value={formatNumber(sample.prompt_chars)} />
-                <InfoBlock title="Response chars" value={formatNumber(sample.response_chars)} />
-                <InfoBlock title="Throughput" value={`${toNumber(sample.tokens_per_second).toFixed(2)} tok/s`} />
-                <InfoBlock title="Format path" value={formatSampleFormatPath(sample)} />
-                <InfoBlock title="Provider" value={String(sample.provider ?? "-")} />
-              </div>
-
-              {extraEntries.length > 0 ? (
-                <div className="metadata-pairs">
-                  {extraEntries.map(([key, value]) => (
-                    <div className="metadata-pair" key={key}>
-                      <span>{key}</span>
-                      <pre>{renderStructuredValue(value)}</pre>
+            <LazyDetails
+              key={record.sampleKey}
+              summary={
+                <>
+                  <div>
+                    <div className="summary-title">
+                      {record.displayBenchmarkName} · {record.displayModelName} · sample #{sample.sample_index ?? 0}
                     </div>
-                  ))}
-                </div>
-              ) : null}
-
-              {sample.raw_provider_metrics ? (
-                <div className="json-block">
-                  <div className="json-block__title">
-                    {toRecord(sample.raw_provider_metrics).trimmed ? "Raw provider metrics (trimmed synced view)" : "Raw provider metrics"}
+                    <div className="summary-subtitle">
+                      {typeof sample.question === "string"
+                        ? sample.question
+                        : typeof sample.problem === "string"
+                          ? sample.problem
+                          : "Open the record to inspect prompt, response, and metadata."}
+                    </div>
                   </div>
-                  <pre>{JSON.stringify(sample.raw_provider_metrics, null, 2)}</pre>
-                </div>
-              ) : null}
+                  <div className="summary-metrics">
+                    <span className={statusClass}>{statusLabel}</span>
+                    {sample.used_raw_fallback ? <span className="status-warn">raw fallback</span> : null}
+                    {!sample.used_raw_fallback && sample.raw_fallback_attempted ? <span className="status-warn">fallback tried</span> : null}
+                    <span>{formatDuration(sample.latency_sec)}</span>
+                    <span>{formatNumber(sample.total_tokens)} tok</span>
+                  </div>
+                </>
+              }
+              renderContent={() => {
+                const extraEntries = Object.entries(sample).filter(([key]) => !SAMPLE_BASE_FIELDS.has(key));
 
-              <div className="json-block">
-                <div className="json-block__title">Full sample JSON</div>
-                <pre>{JSON.stringify(sample, null, 2)}</pre>
-              </div>
-            </details>
+                return (
+                  <>
+                    <div className="sample-panels">
+                      <TextBlock title="Prompt" value={sample.prompt} />
+                      <TextBlock title="Response" value={sample.response_text} />
+                      <TextBlock title="Expected answer" value={sample.expected_answer} />
+                      <TextBlock title="Parsed prediction" value={sample.parsed_prediction} />
+                    </div>
+
+                    <div className="detail-grid">
+                      <InfoBlock title="Started" value={formatDate(sample.started_at)} />
+                      <InfoBlock title="Ended" value={formatDate(sample.ended_at)} />
+                      <InfoBlock title="Latency" value={formatDuration(sample.latency_sec)} />
+                      <InfoBlock title="Total duration" value={formatDuration(sample.total_duration_sec)} />
+                      <InfoBlock title="Load duration" value={formatDuration(sample.load_duration_sec)} />
+                      <InfoBlock title="Prompt eval" value={formatDuration(sample.prompt_eval_duration_sec)} />
+                      <InfoBlock title="Eval duration" value={formatDuration(sample.eval_duration_sec)} />
+                      <InfoBlock title="Prompt tokens" value={formatNumber(sample.prompt_tokens)} />
+                      <InfoBlock title="Completion tokens" value={formatNumber(sample.completion_tokens)} />
+                      <InfoBlock title="Prompt chars" value={formatNumber(sample.prompt_chars)} />
+                      <InfoBlock title="Response chars" value={formatNumber(sample.response_chars)} />
+                      <InfoBlock title="Throughput" value={`${toNumber(sample.tokens_per_second).toFixed(2)} tok/s`} />
+                      <InfoBlock title="Format path" value={formatSampleFormatPath(sample)} />
+                      <InfoBlock title="Provider" value={String(sample.provider ?? "-")} />
+                    </div>
+
+                    {extraEntries.length > 0 ? (
+                      <div className="metadata-pairs">
+                        {extraEntries.map(([key, value]) => (
+                          <div className="metadata-pair" key={key}>
+                            <span>{key}</span>
+                            <pre>{renderStructuredValue(value)}</pre>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {sample.raw_provider_metrics ? (
+                      <JsonBlock
+                        title={toRecord(sample.raw_provider_metrics).trimmed ? "Raw provider metrics (trimmed synced view)" : "Raw provider metrics"}
+                        value={sample.raw_provider_metrics}
+                      />
+                    ) : null}
+
+                    <JsonBlock title="Full sample JSON" value={sample} />
+                  </>
+                );
+              }}
+            />
           );
         })}
       </div>
@@ -929,53 +1049,53 @@ function DataArchivePanel({ session }: { session: BenchmarkSession }) {
         <h2>Raw data archive</h2>
       </div>
       <div className="details-list">
-        <details className="terminal-details">
-          <summary>
+        <LazyDetails
+          summary={
             <div>
               <div className="summary-title">Run manifest</div>
               <div className="summary-subtitle">Exact benchmark selection, system metadata, repository metadata, and runtime config path.</div>
             </div>
-          </summary>
-          <div className="json-block">
-            <pre>{JSON.stringify(session.run.manifest, null, 2)}</pre>
-          </div>
-        </details>
+          }
+          renderContent={() => (
+            <JsonBlock value={session.run.manifest} />
+          )}
+        />
 
-        <details className="terminal-details">
-          <summary>
+        <LazyDetails
+          summary={
             <div>
               <div className="summary-title">Benchmark catalog slice</div>
               <div className="summary-subtitle">Selected benchmark metadata mirrored from the run manifest.</div>
             </div>
-          </summary>
-          <div className="json-block">
-            <pre>{JSON.stringify(session.catalog ?? {}, null, 2)}</pre>
-          </div>
-        </details>
+          }
+          renderContent={() => (
+            <JsonBlock value={session.catalog ?? {}} />
+          )}
+        />
 
-        <details className="terminal-details">
-          <summary>
+        <LazyDetails
+          summary={
             <div>
               <div className="summary-title">Session source metadata</div>
               <div className="summary-subtitle">Artifact root, export directory, and website sync directory.</div>
             </div>
-          </summary>
-          <div className="json-block">
-            <pre>{JSON.stringify(session.source ?? {}, null, 2)}</pre>
-          </div>
-        </details>
+          }
+          renderContent={() => (
+            <JsonBlock value={session.source ?? {}} />
+          )}
+        />
 
-        <details className="terminal-details">
-          <summary>
+        <LazyDetails
+          summary={
             <div>
               <div className="summary-title">Full session JSON</div>
               <div className="summary-subtitle">The exact synced payload the website is rendering right now.</div>
             </div>
-          </summary>
-          <div className="json-block">
-            <pre>{JSON.stringify(session, null, 2)}</pre>
-          </div>
-        </details>
+          }
+          renderContent={() => (
+            <JsonBlock value={session} />
+          )}
+        />
       </div>
     </section>
   );
@@ -1017,10 +1137,23 @@ function InfoBlock({ title, value }: { title: string; value: string }) {
 }
 
 function TextBlock({ title, value }: { title: string; value: unknown }) {
+  const text = useMemo(() => renderStructuredValue(value), [value]);
+
   return (
     <div className="json-block">
       <div className="json-block__title">{title}</div>
-      <pre>{renderStructuredValue(value)}</pre>
+      <pre>{text}</pre>
+    </div>
+  );
+}
+
+function JsonBlock({ title, value }: { title?: string; value: unknown }) {
+  const text = useMemo(() => JSON.stringify(value, null, 2) ?? "-", [value]);
+
+  return (
+    <div className="json-block">
+      {title ? <div className="json-block__title">{title}</div> : null}
+      <pre>{text}</pre>
     </div>
   );
 }
@@ -1070,7 +1203,7 @@ function formatDuration(value: unknown): string {
 }
 
 function formatNumber(value: unknown): string {
-  return Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(toNumber(value));
+  return NUMBER_FORMATTER.format(toNumber(value));
 }
 
 function formatDate(value: unknown): string {
@@ -1140,12 +1273,5 @@ function matrixClassName(accuracy: number): string {
   }
   return "matrix-cell--weak";
 }
-
-const tooltipStyle = {
-  backgroundColor: "#0b120f",
-  border: "1px solid #284133",
-  borderRadius: "6px",
-  color: "#d7efe0",
-};
 
 export default App;

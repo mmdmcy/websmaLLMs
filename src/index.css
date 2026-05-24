@@ -348,6 +348,52 @@ pre {
   height: 300px;
 }
 
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-grid-line {
+  stroke: rgba(120, 173, 145, 0.18);
+  stroke-width: 1;
+}
+
+.chart-axis-line {
+  stroke: rgba(141, 180, 157, 0.75);
+  stroke-width: 1;
+}
+
+.chart-label,
+.chart-axis-title,
+.chart-value {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.chart-axis-title {
+  fill: var(--text);
+  font-weight: 600;
+}
+
+.chart-label--model {
+  fill: var(--text);
+}
+
+.chart-mark {
+  fill: var(--green);
+  stroke: rgba(4, 7, 5, 0.86);
+  stroke-width: 1.5;
+}
+
+.chart-bar {
+  fill: var(--amber);
+}
+
+.chart-value {
+  fill: var(--text);
+}
+
 .search-input {
   min-width: min(380px, 100%);
   padding: 0 12px;
