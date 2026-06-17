@@ -4,7 +4,6 @@
 Site: https://smallms.com/
 Docs: https://smallms.com/
 Sitemap: https://smallms.com/sitemap_index.xml
-Sitemap: https://www.smallms.com/sitemap_index.xml
 
 # Public content highlights
 Route: /

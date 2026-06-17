@@ -29,4 +29,3 @@ User-agent: ExaBot
 Allow: /
 
 Sitemap: https://smallms.com/sitemap.xml
-Sitemap: https://www.smallms.com/sitemap.xml
