@@ -1,0 +1,1076 @@
+{
+  "schema_version": "agent_harness.web.v1",
+  "exported_at": "2026-07-08T07:12:05.519503+00:00",
+  "run_id": "agent-harness-2026-07-08T054337-221146Z",
+  "created_at": "2026-07-08T05:43:37.221146+00:00",
+  "mode": "agent_harness_eval",
+  "timeout_seconds": 900,
+  "source": {
+    "summary_path": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/summary.json",
+    "run_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z",
+    "payload_profile": "compact_agent_harness_public",
+    "synced": true,
+    "latest_path": "agent-harness/latest.json",
+    "history_path": "agent-harness/runs/agent-harness-2026-07-08T054337-221146Z.json"
+  },
+  "system": {
+    "platform": "Linux",
+    "platform_release": "6.17.0-35-generic",
+    "architecture": "x86_64",
+    "python_version": "3.12.3"
+  },
+  "totals": {
+    "rows": 9,
+    "completed": 9,
+    "passed": 9,
+    "failed": 0,
+    "dry_run": 0,
+    "duration_seconds_total": 649.399,
+    "reported_total_tokens": 38289,
+    "reported_token_rows": 3
+  },
+  "harnesses": [
+    {
+      "key": "pi",
+      "display_name": "Pi",
+      "version": "0.79.10",
+      "model": "openai-codex/gpt-5.5",
+      "reasoning": "xhigh",
+      "rows": 3,
+      "completed": 3,
+      "passed": 3,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "duration_seconds_total": 190.883,
+      "avg_duration_seconds": 63.628,
+      "reported_total_tokens": null,
+      "reported_token_rows": 0,
+      "max_agent_rss_kb": 179784,
+      "unexpected_change_rows": 0
+    },
+    {
+      "key": "opencode",
+      "display_name": "OpenCode",
+      "version": "1.17.9",
+      "model": "openai/gpt-5.5",
+      "reasoning": "xhigh",
+      "rows": 3,
+      "completed": 3,
+      "passed": 3,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "duration_seconds_total": 234.587,
+      "avg_duration_seconds": 78.196,
+      "reported_total_tokens": null,
+      "reported_token_rows": 0,
+      "max_agent_rss_kb": 650176,
+      "unexpected_change_rows": 0
+    },
+    {
+      "key": "codex",
+      "display_name": "Codex CLI",
+      "version": "codex-cli 0.142.0",
+      "model": "gpt-5.5",
+      "reasoning": "xhigh",
+      "rows": 3,
+      "completed": 3,
+      "passed": 3,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "duration_seconds_total": 223.929,
+      "avg_duration_seconds": 74.643,
+      "reported_total_tokens": 38289,
+      "reported_token_rows": 3,
+      "max_agent_rss_kb": 136712,
+      "unexpected_change_rows": 0
+    }
+  ],
+  "findings": [
+    {
+      "kind": "quality",
+      "title": "Quality tied on this run",
+      "summary": "All 3 harnesses passed their rows and changed only expected files. The quality result is therefore a tie on this fixture set."
+    },
+    {
+      "kind": "speed",
+      "title": "Fastest average: Pi",
+      "summary": "Pi averaged 63.6s per row. The slowest average was OpenCode at 78.2s, a 14.6s gap."
+    },
+    {
+      "kind": "memory",
+      "title": "Lowest local peak RSS: Codex CLI",
+      "summary": "Codex CLI peaked at 133.5 MB. The highest local peak RSS was OpenCode at 634.9 MB."
+    },
+    {
+      "kind": "tokens",
+      "title": "Token reporting is partial",
+      "summary": "Only Codex CLI reported per-run token usage in captured CLI output. The run recorded 38,289 reported tokens across 3 rows."
+    }
+  ],
+  "tasks": [
+    {
+      "key": "median_bugfix",
+      "display_name": "Median bugfix",
+      "test_command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_stats"
+      ],
+      "expected_files": [
+        "calcstats/stats.py"
+      ]
+    },
+    {
+      "key": "cli_feature",
+      "display_name": "CLI feature",
+      "test_command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_cli"
+      ],
+      "expected_files": [
+        "calcstats/cli.py"
+      ]
+    },
+    {
+      "key": "path_safety",
+      "display_name": "Path safety",
+      "test_command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_files"
+      ],
+      "expected_files": [
+        "calcstats/files.py"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "harness": "pi",
+      "harness_display_name": "Pi",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "openai-codex/gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 17.411,
+      "started_at": "2026-07-08T05:43:39.752906+00:00",
+      "ended_at": "2026-07-08T05:43:57.163362+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 5 ++++-\n 1 file changed, 4 insertions(+), 1 deletion(-)\n",
+      "usage": {
+        "source": "not_reported",
+        "total_tokens": null,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": null
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 2.37,
+            "system_time_seconds": 0.3,
+            "cpu_percent": 15,
+            "elapsed_wall_clock": "0:17.40",
+            "max_resident_set_kb": 173780,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 0,
+            "minor_page_faults": 38728,
+            "voluntary_context_switches": 3380,
+            "involuntary_context_switches": 1474,
+            "file_system_inputs": 0,
+            "file_system_outputs": 40,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 248,
+          "chars": 248,
+          "lines": 9
+        },
+        "agent_stderr": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/pi/median_bugfix",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/pi/median_bugfix/workspace.patch"
+      }
+    },
+    {
+      "harness": "pi",
+      "harness_display_name": "Pi",
+      "task": "cli_feature",
+      "task_display_name": "CLI feature",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "openai-codex/gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 57.216,
+      "started_at": "2026-07-08T05:43:57.277172+00:00",
+      "ended_at": "2026-07-08T05:44:54.492435+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/cli.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": "",
+      "usage": {
+        "source": "not_reported",
+        "total_tokens": null,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": null
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 3.24,
+            "system_time_seconds": 0.64,
+            "cpu_percent": 6,
+            "elapsed_wall_clock": "0:57.21",
+            "max_resident_set_kb": 179784,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 0,
+            "minor_page_faults": 69748,
+            "voluntary_context_switches": 8658,
+            "involuntary_context_switches": 2135,
+            "file_system_inputs": 0,
+            "file_system_outputs": 64,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 371,
+          "chars": 367,
+          "lines": 16
+        },
+        "agent_stderr": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 101,
+          "chars": 101,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/cli.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/cli.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/pi/cli_feature",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/pi/cli_feature/workspace.patch"
+      }
+    },
+    {
+      "harness": "pi",
+      "harness_display_name": "Pi",
+      "task": "path_safety",
+      "task_display_name": "Path safety",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "openai-codex/gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 116.256,
+      "started_at": "2026-07-08T05:44:54.785417+00:00",
+      "ended_at": "2026-07-08T05:46:51.041225+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/files.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/files.py | 12 +++++++++++-\n 1 file changed, 11 insertions(+), 1 deletion(-)\n",
+      "usage": {
+        "source": "not_reported",
+        "total_tokens": null,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": null
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 3.14,
+            "system_time_seconds": 0.6,
+            "cpu_percent": 3,
+            "elapsed_wall_clock": "1:56.25",
+            "max_resident_set_kb": 173992,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 0,
+            "minor_page_faults": 45168,
+            "voluntary_context_switches": 8656,
+            "involuntary_context_switches": 1066,
+            "file_system_inputs": 0,
+            "file_system_outputs": 48,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 280,
+          "chars": 280,
+          "lines": 10
+        },
+        "agent_stderr": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/files.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/files.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/pi/path_safety",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/pi/path_safety/workspace.patch"
+      }
+    },
+    {
+      "harness": "opencode",
+      "harness_display_name": "OpenCode",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "openai/gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 70.971,
+      "started_at": "2026-07-08T05:46:51.166366+00:00",
+      "ended_at": "2026-07-08T05:48:02.137032+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 6 ++++--\n 1 file changed, 4 insertions(+), 2 deletions(-)\n",
+      "usage": {
+        "source": "not_reported",
+        "total_tokens": null,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": null
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 25.62,
+            "system_time_seconds": 2.72,
+            "cpu_percent": 39,
+            "elapsed_wall_clock": "1:10.96",
+            "max_resident_set_kb": 619536,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 0,
+            "minor_page_faults": 307036,
+            "voluntary_context_switches": 48637,
+            "involuntary_context_switches": 24925,
+            "file_system_inputs": 0,
+            "file_system_outputs": 29808,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 576,
+          "chars": 572,
+          "lines": 6
+        },
+        "agent_stderr": {
+          "bytes": 1094,
+          "chars": 1071,
+          "lines": 39
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/opencode/median_bugfix",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/opencode/median_bugfix/workspace.patch"
+      }
+    },
+    {
+      "harness": "opencode",
+      "harness_display_name": "OpenCode",
+      "task": "cli_feature",
+      "task_display_name": "CLI feature",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "openai/gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 74.402,
+      "started_at": "2026-07-08T05:48:02.261901+00:00",
+      "ended_at": "2026-07-08T05:49:16.663354+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/cli.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": "",
+      "usage": {
+        "source": "not_reported",
+        "total_tokens": null,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": null
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 28.81,
+            "system_time_seconds": 3.21,
+            "cpu_percent": 43,
+            "elapsed_wall_clock": "1:14.39",
+            "max_resident_set_kb": 650176,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 0,
+            "minor_page_faults": 342054,
+            "voluntary_context_switches": 54853,
+            "involuntary_context_switches": 27351,
+            "file_system_inputs": 0,
+            "file_system_outputs": 27192,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 823,
+          "chars": 815,
+          "lines": 13
+        },
+        "agent_stderr": {
+          "bytes": 1353,
+          "chars": 1321,
+          "lines": 45
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 101,
+          "chars": 101,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/cli.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/cli.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/opencode/cli_feature",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/opencode/cli_feature/workspace.patch"
+      }
+    },
+    {
+      "harness": "opencode",
+      "harness_display_name": "OpenCode",
+      "task": "path_safety",
+      "task_display_name": "Path safety",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "openai/gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 89.214,
+      "started_at": "2026-07-08T05:49:16.939180+00:00",
+      "ended_at": "2026-07-08T05:50:46.153165+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/files.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/files.py | 3 +++\n 1 file changed, 3 insertions(+)\n",
+      "usage": {
+        "source": "not_reported",
+        "total_tokens": null,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": null
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 25.77,
+            "system_time_seconds": 2.77,
+            "cpu_percent": 32,
+            "elapsed_wall_clock": "1:29.21",
+            "max_resident_set_kb": 625296,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 0,
+            "minor_page_faults": 307224,
+            "voluntary_context_switches": 50413,
+            "involuntary_context_switches": 24019,
+            "file_system_inputs": 0,
+            "file_system_outputs": 24072,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 804,
+          "chars": 800,
+          "lines": 6
+        },
+        "agent_stderr": {
+          "bytes": 1005,
+          "chars": 991,
+          "lines": 32
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/files.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/files.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/opencode/path_safety",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/opencode/path_safety/workspace.patch"
+      }
+    },
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 85.31,
+      "started_at": "2026-07-08T05:50:46.277198+00:00",
+      "ended_at": "2026-07-08T05:52:11.586849+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 5 ++++-\n 1 file changed, 4 insertions(+), 1 deletion(-)\n",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 14317,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n14,317"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 3.67,
+            "system_time_seconds": 3.02,
+            "cpu_percent": 7,
+            "elapsed_wall_clock": "1:25.30",
+            "max_resident_set_kb": 136568,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 0,
+            "minor_page_faults": 212510,
+            "voluntary_context_switches": 39712,
+            "involuntary_context_switches": 19522,
+            "file_system_inputs": 0,
+            "file_system_outputs": 9256,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 260,
+          "chars": 260,
+          "lines": 3
+        },
+        "agent_stderr": {
+          "bytes": 18587,
+          "chars": 18565,
+          "lines": 556
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/codex/median_bugfix",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/codex/median_bugfix/workspace.patch"
+      }
+    },
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "cli_feature",
+      "task_display_name": "CLI feature",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 79.096,
+      "started_at": "2026-07-08T05:52:11.719479+00:00",
+      "ended_at": "2026-07-08T05:53:30.815539+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/cli.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": "",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 14533,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n14,533"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 2.89,
+            "system_time_seconds": 2.3,
+            "cpu_percent": 6,
+            "elapsed_wall_clock": "1:19.09",
+            "max_resident_set_kb": 136712,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 3,
+            "minor_page_faults": 161870,
+            "voluntary_context_switches": 31638,
+            "involuntary_context_switches": 14150,
+            "file_system_inputs": 0,
+            "file_system_outputs": 6936,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 442,
+          "chars": 442,
+          "lines": 8
+        },
+        "agent_stderr": {
+          "bytes": 10833,
+          "chars": 10819,
+          "lines": 366
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 101,
+          "chars": 101,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/cli.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/cli.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/codex/cli_feature",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/codex/cli_feature/workspace.patch"
+      }
+    },
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "path_safety",
+      "task_display_name": "Path safety",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.5",
+      "reasoning": "xhigh",
+      "duration_seconds": 59.523,
+      "started_at": "2026-07-08T05:53:31.063689+00:00",
+      "ended_at": "2026-07-08T05:54:30.586659+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/files.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/files.py | 14 +++++++++++++-\n 1 file changed, 13 insertions(+), 1 deletion(-)\n",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 9439,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n9,439"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 2.55,
+            "system_time_seconds": 2.05,
+            "cpu_percent": 7,
+            "elapsed_wall_clock": "0:59.52",
+            "max_resident_set_kb": 136700,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 2,
+            "minor_page_faults": 132485,
+            "voluntary_context_switches": 37156,
+            "involuntary_context_switches": 12224,
+            "file_system_inputs": 0,
+            "file_system_outputs": 6184,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 314,
+          "chars": 314,
+          "lines": 3
+        },
+        "agent_stderr": {
+          "bytes": 8929,
+          "chars": 8919,
+          "lines": 282
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/files.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/files.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/codex/path_safety",
+        "patch": "artifacts/agent_harness/runs/agent-harness-2026-07-08T054337-221146Z/logs/codex/path_safety/workspace.patch"
+      }
+    }
+  ],
+  "limitations": [
+    "Token, cost, and context metrics are nullable because Pi and OpenCode did not report comparable values in captured CLI output.",
+    "Codex CLI reported a single total token count; prompt/completion/reasoning token splits were not available in the log.",
+    "Peak RSS is measured with GNU time -v when available and should be treated as subprocess memory telemetry, not full provider-side memory."
+  ]
+}

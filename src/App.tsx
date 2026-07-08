@@ -15,7 +15,9 @@ import {
   Upload,
   Zap,
 } from "lucide-react";
+import { useAgentHarnessData } from "./hooks/useAgentHarnessData";
 import { useEvaluationData } from "./hooks/useEvaluationData";
+import type { AgentHarnessFinding, AgentHarnessResult, AgentHarnessSummary } from "./types/agentHarness";
 import type {
   BenchmarkSession,
   EvaluationRecord,
@@ -83,6 +85,13 @@ const NUMBER_FORMATTER = new Intl.NumberFormat("en-US", { maximumFractionDigits:
 
 function App() {
   const { session, source, isLoading, error, importFile, reloadSynced } = useEvaluationData();
+  const {
+    summary: agentHarness,
+    source: agentHarnessSource,
+    isLoading: isAgentHarnessLoading,
+    error: agentHarnessError,
+    reloadSynced: reloadAgentHarness,
+  } = useAgentHarnessData();
   const [selectedModel, setSelectedModel] = useState("all");
   const [selectedBenchmark, setSelectedBenchmark] = useState("all");
   const [correctnessFilter, setCorrectnessFilter] = useState("all");
@@ -258,6 +267,14 @@ function App() {
         <EmptyState onReload={reloadSynced} />
       ) : null}
 
+      <AgentHarnessPanel
+        error={agentHarnessError}
+        isLoading={isAgentHarnessLoading}
+        onReload={reloadAgentHarness}
+        sourceLabel={agentHarnessSource?.label ?? "/data/agent-harness/latest.json"}
+        summary={agentHarness}
+      />
+
       {session ? (
         <>
           <OverviewPanel session={session} sourceLabel={source?.label ?? "/data/latest-session.json"} />
@@ -352,6 +369,214 @@ function EmptyState({ onReload }: { onReload: () => Promise<void> }) {
         Retry synced session
       </button>
     </section>
+  );
+}
+
+function AgentHarnessPanel({
+  error,
+  isLoading,
+  onReload,
+  sourceLabel,
+  summary,
+}: {
+  error: string | null;
+  isLoading: boolean;
+  onReload: () => Promise<void>;
+  sourceLabel: string;
+  summary: AgentHarnessSummary | null;
+}) {
+  if (!summary && isLoading) {
+    return (
+      <section className="panel">
+        <div className="panel-heading">
+          <RefreshCw className="spin" size={18} />
+          <h2>Loading agent harness results</h2>
+        </div>
+      </section>
+    );
+  }
+
+  if (!summary) {
+    return (
+      <section className="panel panel--warning">
+        <div className="panel-heading panel-heading--space">
+          <div className="panel-heading__title">
+            <AlertTriangle size={18} />
+            <h2>Agent harness results unavailable</h2>
+          </div>
+          <button className="terminal-button" onClick={() => void onReload()} type="button">
+            <RefreshCw size={16} />
+            Reload
+          </button>
+        </div>
+        <p>{error ?? `No agent harness export was found at ${sourceLabel}.`}</p>
+      </section>
+    );
+  }
+
+  const totals = summary.totals ?? {};
+  const sortedResults = [...summary.results].sort((left, right) => {
+    const harnessCompare = left.harness.localeCompare(right.harness);
+    return harnessCompare || left.task.localeCompare(right.task);
+  });
+
+  return (
+    <section className="panel">
+      <div className="panel-heading panel-heading--space">
+        <div className="panel-heading__title">
+          <Terminal size={18} />
+          <h2>Agent harness comparison</h2>
+        </div>
+        <div className="panel-heading__meta">
+          <span>{summary.run_id}</span>
+          <span>{sourceLabel}</span>
+        </div>
+      </div>
+
+      <div className="stats-grid agent-harness-stats">
+        <StatCard icon={<Layers3 size={18} />} label="Rows" value={formatMaybeNumber(totals.rows)} />
+        <StatCard icon={<Activity size={18} />} label="Passed" value={formatMaybeNumber(totals.passed)} />
+        <StatCard icon={<AlertTriangle size={18} />} label="Failed" value={formatMaybeNumber(totals.failed)} />
+        <StatCard icon={<Clock3 size={18} />} label="Total time" value={formatDuration(totals.duration_seconds_total)} />
+        <StatCard icon={<FileJson size={18} />} label="Reported tokens" value={formatMaybeNumber(totals.reported_total_tokens)} />
+        <StatCard icon={<Gauge size={18} />} label="Token rows" value={formatMaybeNumber(totals.reported_token_rows)} />
+        <StatCard icon={<HardDrive size={18} />} label="Mode" value={summary.mode ?? "-"} />
+        <StatCard icon={<Cpu size={18} />} label="Exported" value={formatDate(summary.exported_at)} />
+      </div>
+
+      <p className="panel-copy">
+        This is a separate public JSON feed for coding-agent harness runs. Token, cost, and context fields stay nullable when a
+        harness does not report them; peak RSS is local subprocess telemetry.
+      </p>
+
+      {summary.findings?.length ? <AgentHarnessFindings findings={summary.findings} /> : null}
+
+      <div className="table-wrap agent-harness-table">
+        <table className="terminal-table">
+          <thead>
+            <tr>
+              <th>Harness</th>
+              <th>Model</th>
+              <th>Pass rate</th>
+              <th>Avg time</th>
+              <th>Tokens</th>
+              <th>Peak RSS</th>
+              <th>Unexpected changes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {summary.harnesses.map((harness) => (
+              <tr key={harness.key}>
+                <td>
+                  <div className="table-main">{harness.display_name ?? harness.key}</div>
+                  <div className="table-sub">{harness.version ?? "version unavailable"}</div>
+                </td>
+                <td>
+                  <div className="table-main">{harness.model ?? "-"}</div>
+                  <div className="table-sub">{harness.reasoning ?? "-"}</div>
+                </td>
+                <td>{formatNullablePercent(harness.pass_rate)}</td>
+                <td>{formatMaybeDuration(harness.avg_duration_seconds)}</td>
+                <td>{formatMaybeNumber(harness.reported_total_tokens)}</td>
+                <td>{formatMemoryKb(harness.max_agent_rss_kb)}</td>
+                <td>{formatMaybeNumber(harness.unexpected_change_rows)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="details-list agent-harness-details">
+        <LazyDetails
+          summary={
+            <div>
+              <div className="summary-title">Task-level harness rows</div>
+              <div className="summary-subtitle">{formatNumber(sortedResults.length)} rows with timing, usage, memory, and quality signals.</div>
+            </div>
+          }
+          renderContent={() => <AgentHarnessRows rows={sortedResults} />}
+        />
+        {summary.limitations?.length ? (
+          <LazyDetails
+            summary={
+              <div>
+                <div className="summary-title">Measurement limitations</div>
+                <div className="summary-subtitle">How to interpret missing or best-effort telemetry.</div>
+              </div>
+            }
+            renderContent={() => (
+              <div className="metadata-pairs">
+                {summary.limitations?.map((limitation, index) => (
+                  <div className="metadata-pair" key={limitation}>
+                    <span>limitation {index + 1}</span>
+                    <pre>{limitation}</pre>
+                  </div>
+                ))}
+              </div>
+            )}
+          />
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function AgentHarnessFindings({ findings }: { findings: AgentHarnessFinding[] }) {
+  return (
+    <div className="agent-harness-findings">
+      {findings.map((finding) => (
+        <div className="finding-card" key={`${finding.kind}-${finding.title}`}>
+          <span>{finding.kind}</span>
+          <strong>{finding.title}</strong>
+          <p>{finding.summary}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AgentHarnessRows({ rows }: { rows: AgentHarnessResult[] }) {
+  return (
+    <div className="table-wrap">
+      <table className="terminal-table">
+        <thead>
+          <tr>
+            <th>Harness</th>
+            <th>Task</th>
+            <th>Status</th>
+            <th>Seconds</th>
+            <th>Tokens</th>
+            <th>Peak RSS</th>
+            <th>Changed files</th>
+            <th>Usage source</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const unexpected = row.quality_signals?.unexpected_changed_files ?? [];
+            const statusClass = row.status === "passed" ? "status-ok" : row.status === "dry_run" ? "status-warn" : "status-bad";
+            return (
+              <tr key={`${row.harness}-${row.task}`}>
+                <td>{row.harness_display_name ?? row.harness}</td>
+                <td>
+                  <div className="table-main">{row.task_display_name ?? row.task}</div>
+                  <div className="table-sub">{row.test_status ?? "-"}</div>
+                </td>
+                <td>
+                  <span className={statusClass}>{row.status}</span>
+                  {unexpected.length > 0 ? <div className="table-sub status-warn">{unexpected.length} unexpected file(s)</div> : null}
+                </td>
+                <td>{formatDuration(row.duration_seconds)}</td>
+                <td>{formatMaybeNumber(row.usage?.total_tokens)}</td>
+                <td>{formatMemoryKb(row.resource_usage?.agent?.metrics?.max_resident_set_kb)}</td>
+                <td>{(row.changed_files ?? []).join(", ") || "-"}</td>
+                <td>{row.usage?.source ?? "not_reported"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -1202,8 +1427,27 @@ function formatDuration(value: unknown): string {
   return `${minutes}m ${remainder.toFixed(0)}s`;
 }
 
+function formatMaybeDuration(value: unknown): string {
+  return value === null || value === undefined || value === "" ? "-" : formatDuration(value);
+}
+
 function formatNumber(value: unknown): string {
   return NUMBER_FORMATTER.format(toNumber(value));
+}
+
+function formatMaybeNumber(value: unknown): string {
+  return typeof value === "number" && Number.isFinite(value) ? NUMBER_FORMATTER.format(value) : "-";
+}
+
+function formatNullablePercent(value: unknown): string {
+  return typeof value === "number" && Number.isFinite(value) ? `${percentNumber(value).toFixed(1)}%` : "-";
+}
+
+function formatMemoryKb(value: unknown): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "-";
+  }
+  return `${(value / 1024).toFixed(1)} MB`;
 }
 
 function formatDate(value: unknown): string {

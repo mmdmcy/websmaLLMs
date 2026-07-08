@@ -16,10 +16,15 @@ Primary file:
 
 - `public/data/latest-session.json`
 
+Agent harness file:
+
+- `public/data/agent-harness/latest.json`
+
 The benchmark repo can mirror that file automatically when it exports a run:
 
 - `../smaLLMs/website_exports/latest/session.json`
 - mirrored to `public/data/latest-session.json`
+- mirrored agent-harness summaries to `public/data/agent-harness/latest.json`
 
 The UI supports two data paths:
 
@@ -35,6 +40,7 @@ The session bundle is intentionally dense. The site reads and displays:
 - per-benchmark coverage and metric matrix
 - per-evaluation metrics and artifact paths
 - sample-level prompt, response, parsed answer, correctness, latency, tokens, and raw provider metadata
+- coding-agent harness summaries with findings, pass/fail, duration, reported token usage, peak RSS, changed files, and quality signals
 
 ## Stack
 

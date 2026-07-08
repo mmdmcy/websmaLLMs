@@ -315,6 +315,47 @@ pre {
 .stat-card__value {
   font-size: 1.25rem;
   color: var(--green);
+  overflow-wrap: anywhere;
+}
+
+.agent-harness-stats {
+  margin-bottom: 14px;
+}
+
+.agent-harness-findings {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.finding-card {
+  padding: 12px;
+  border: 1px solid rgba(49, 81, 61, 0.38);
+  background: rgba(4, 7, 5, 0.45);
+}
+
+.finding-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.finding-card strong {
+  display: block;
+  color: var(--green);
+}
+
+.finding-card p {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.agent-harness-table,
+.agent-harness-details {
+  margin-top: 16px;
 }
 
 .meta-list {
@@ -701,6 +742,7 @@ pre {
 @media (max-width: 1100px) {
   .section-grid,
   .stats-grid,
+  .agent-harness-findings,
   .detail-grid,
   .sample-panels,
   .metadata-pairs,
