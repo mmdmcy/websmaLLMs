@@ -1,0 +1,878 @@
+{
+  "schema_version": "reasoning_effort.web.v1",
+  "exported_at": "2026-07-10T16:39:17.902Z",
+  "run_id": "reasoning-sweep-2026-07-10T162945-599873Z",
+  "created_at": "2026-07-10T16:29:45.599873+00:00",
+  "status": "partial",
+  "mode": "reasoning_effort_sweep",
+  "sweep_kind": "codex_reasoning_effort",
+  "sampling_temperature": null,
+  "temperature_note": "Codex CLI exposes reasoning effort for this sweep; no sampling temperature was set or measured.",
+  "source": {
+    "payload_profile": "compact_reasoning_effort_sweep",
+    "artifacts_dir": "artifacts/reasoning_sweep/runs",
+    "synced": true,
+    "completed_scope": "gpt-5.6-sol across all six supported reasoning efforts on the median_bugfix fixture task",
+    "stopped_after_scope": "The sweep stopped after the completed Sol scope; Terra and Luna variants were not completed."
+  },
+  "model_catalog": [
+    {
+      "model": "gpt-5.6-sol",
+      "display_name": "GPT-5.6 Sol",
+      "description": "Frontier agentic coding model.",
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    }
+  ],
+  "selected_models": [
+    "gpt-5.6-sol"
+  ],
+  "selected_reasoning_efforts": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+    "ultra"
+  ],
+  "totals": {
+    "variants": 6,
+    "rows": 6,
+    "completed": 6,
+    "passed": 6,
+    "failed": 0,
+    "dry_run": 0,
+    "duration_seconds_total": 349.828,
+    "reported_total_tokens": 92247,
+    "reported_token_rows": 6
+  },
+  "variants": [
+    {
+      "variant_id": "gpt-5.6-sol-low",
+      "model": "gpt-5.6-sol",
+      "model_display_name": "GPT-5.6 Sol",
+      "reasoning_effort": "low",
+      "rows": 1,
+      "completed": 1,
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1,
+      "duration_seconds_total": 17.936,
+      "avg_duration_seconds": 17.936,
+      "reported_total_tokens": 6486,
+      "reported_token_rows": 1,
+      "max_agent_rss_kb": 145980,
+      "unexpected_change_rows": 0,
+      "run_id": "agent-harness-2026-07-10T162945-600176Z",
+      "summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-low/runs/agent-harness-2026-07-10T162945-600176Z/summary.json",
+      "web_summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-low/runs/agent-harness-2026-07-10T162945-600176Z/web_summary.json",
+      "artifact_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-low/runs/agent-harness-2026-07-10T162945-600176Z"
+    },
+    {
+      "variant_id": "gpt-5.6-sol-medium",
+      "model": "gpt-5.6-sol",
+      "model_display_name": "GPT-5.6 Sol",
+      "reasoning_effort": "medium",
+      "rows": 1,
+      "completed": 1,
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1,
+      "duration_seconds_total": 53.407,
+      "avg_duration_seconds": 53.407,
+      "reported_total_tokens": 17224,
+      "reported_token_rows": 1,
+      "max_agent_rss_kb": 159856,
+      "unexpected_change_rows": 0,
+      "run_id": "agent-harness-2026-07-10T163005-718399Z",
+      "summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-medium/runs/agent-harness-2026-07-10T163005-718399Z/summary.json",
+      "web_summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-medium/runs/agent-harness-2026-07-10T163005-718399Z/web_summary.json",
+      "artifact_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-medium/runs/agent-harness-2026-07-10T163005-718399Z"
+    },
+    {
+      "variant_id": "gpt-5.6-sol-high",
+      "model": "gpt-5.6-sol",
+      "model_display_name": "GPT-5.6 Sol",
+      "reasoning_effort": "high",
+      "rows": 1,
+      "completed": 1,
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1,
+      "duration_seconds_total": 75.566,
+      "avg_duration_seconds": 75.566,
+      "reported_total_tokens": 13270,
+      "reported_token_rows": 1,
+      "max_agent_rss_kb": 159844,
+      "unexpected_change_rows": 0,
+      "run_id": "agent-harness-2026-07-10T163101-316963Z",
+      "summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-high/runs/agent-harness-2026-07-10T163101-316963Z/summary.json",
+      "web_summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-high/runs/agent-harness-2026-07-10T163101-316963Z/web_summary.json",
+      "artifact_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-high/runs/agent-harness-2026-07-10T163101-316963Z"
+    },
+    {
+      "variant_id": "gpt-5.6-sol-xhigh",
+      "model": "gpt-5.6-sol",
+      "model_display_name": "GPT-5.6 Sol",
+      "reasoning_effort": "xhigh",
+      "rows": 1,
+      "completed": 1,
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1,
+      "duration_seconds_total": 69.668,
+      "avg_duration_seconds": 69.668,
+      "reported_total_tokens": 16528,
+      "reported_token_rows": 1,
+      "max_agent_rss_kb": 159124,
+      "unexpected_change_rows": 0,
+      "run_id": "agent-harness-2026-07-10T163219-091491Z",
+      "summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-xhigh/runs/agent-harness-2026-07-10T163219-091491Z/summary.json",
+      "web_summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-xhigh/runs/agent-harness-2026-07-10T163219-091491Z/web_summary.json",
+      "artifact_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-xhigh/runs/agent-harness-2026-07-10T163219-091491Z"
+    },
+    {
+      "variant_id": "gpt-5.6-sol-max",
+      "model": "gpt-5.6-sol",
+      "model_display_name": "GPT-5.6 Sol",
+      "reasoning_effort": "max",
+      "rows": 1,
+      "completed": 1,
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1,
+      "duration_seconds_total": 77.425,
+      "avg_duration_seconds": 77.425,
+      "reported_total_tokens": 24526,
+      "reported_token_rows": 1,
+      "max_agent_rss_kb": 159496,
+      "unexpected_change_rows": 0,
+      "run_id": "agent-harness-2026-07-10T163330-942436Z",
+      "summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-max/runs/agent-harness-2026-07-10T163330-942436Z/summary.json",
+      "web_summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-max/runs/agent-harness-2026-07-10T163330-942436Z/web_summary.json",
+      "artifact_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-max/runs/agent-harness-2026-07-10T163330-942436Z"
+    },
+    {
+      "variant_id": "gpt-5.6-sol-ultra",
+      "model": "gpt-5.6-sol",
+      "model_display_name": "GPT-5.6 Sol",
+      "reasoning_effort": "ultra",
+      "rows": 1,
+      "completed": 1,
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1,
+      "duration_seconds_total": 55.826,
+      "avg_duration_seconds": 55.826,
+      "reported_total_tokens": 14213,
+      "reported_token_rows": 1,
+      "max_agent_rss_kb": 159916,
+      "unexpected_change_rows": 0,
+      "run_id": "agent-harness-2026-07-10T163450-684376Z",
+      "summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-ultra/runs/agent-harness-2026-07-10T163450-684376Z/summary.json",
+      "web_summary_path": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-ultra/runs/agent-harness-2026-07-10T163450-684376Z/web_summary.json",
+      "artifact_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-ultra/runs/agent-harness-2026-07-10T163450-684376Z"
+    }
+  ],
+  "findings": [
+    {
+      "kind": "quality",
+      "title": "All completed variants passed",
+      "summary": "6 reasoning-effort variants completed without a failing fixture row."
+    },
+    {
+      "kind": "speed",
+      "title": "Fastest: GPT-5.6 Sol low",
+      "summary": "This variant averaged 17.936s per fixture row."
+    },
+    {
+      "kind": "tokens",
+      "title": "Fewest reported tokens: GPT-5.6 Sol low",
+      "summary": "This variant reported 6,486 CLI tokens across its rows."
+    },
+    {
+      "kind": "scope",
+      "title": "Codex effort sweep, not temperature sweep",
+      "summary": "Codex CLI exposes reasoning effort for this workflow; sampling temperature is not part of this feed."
+    }
+  ],
+  "tasks": [
+    {
+      "key": "median_bugfix",
+      "display_name": "Median bugfix",
+      "test_command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_stats"
+      ],
+      "expected_files": [
+        "calcstats/stats.py"
+      ]
+    },
+    {
+      "key": "cli_feature",
+      "display_name": "CLI feature",
+      "test_command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_cli"
+      ],
+      "expected_files": [
+        "calcstats/cli.py"
+      ]
+    },
+    {
+      "key": "path_safety",
+      "display_name": "Path safety",
+      "test_command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_files"
+      ],
+      "expected_files": [
+        "calcstats/files.py"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.6-sol",
+      "reasoning": "low",
+      "duration_seconds": 17.936,
+      "started_at": "2026-07-10T16:29:47.695246+00:00",
+      "ended_at": "2026-07-10T16:30:05.631153+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 6 ++++--\n 1 file changed, 4 insertions(+), 2 deletions(-)\n",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 6486,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n6,486"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 2.21,
+            "system_time_seconds": 1.51,
+            "cpu_percent": 20,
+            "elapsed_wall_clock": "0:17.93",
+            "max_resident_set_kb": 145980,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 2,
+            "minor_page_faults": 111334,
+            "voluntary_context_switches": 20816,
+            "involuntary_context_switches": 4375,
+            "file_system_inputs": 0,
+            "file_system_outputs": 5576,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 228,
+          "chars": 226,
+          "lines": 3
+        },
+        "agent_stderr": {
+          "bytes": 4779,
+          "chars": 4773,
+          "lines": 145
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-low/runs/agent-harness-2026-07-10T162945-600176Z/logs/codex/median_bugfix",
+        "patch": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-low/runs/agent-harness-2026-07-10T162945-600176Z/logs/codex/median_bugfix/workspace.patch"
+      },
+      "variant_id": "gpt-5.6-sol-low",
+      "reasoning_effort": "low"
+    },
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.6-sol",
+      "reasoning": "medium",
+      "duration_seconds": 53.407,
+      "started_at": "2026-07-10T16:30:07.821843+00:00",
+      "ended_at": "2026-07-10T16:31:01.228888+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 6 ++++--\n 1 file changed, 4 insertions(+), 2 deletions(-)\n",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 17224,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n17,224"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 3.85,
+            "system_time_seconds": 2.83,
+            "cpu_percent": 12,
+            "elapsed_wall_clock": "0:53.40",
+            "max_resident_set_kb": 159856,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 2,
+            "minor_page_faults": 215477,
+            "voluntary_context_switches": 45525,
+            "involuntary_context_switches": 8941,
+            "file_system_inputs": 0,
+            "file_system_outputs": 24488,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 223,
+          "chars": 221,
+          "lines": 3
+        },
+        "agent_stderr": {
+          "bytes": 16149,
+          "chars": 16143,
+          "lines": 509
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-medium/runs/agent-harness-2026-07-10T163005-718399Z/logs/codex/median_bugfix",
+        "patch": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-medium/runs/agent-harness-2026-07-10T163005-718399Z/logs/codex/median_bugfix/workspace.patch"
+      },
+      "variant_id": "gpt-5.6-sol-medium",
+      "reasoning_effort": "medium"
+    },
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.6-sol",
+      "reasoning": "high",
+      "duration_seconds": 75.566,
+      "started_at": "2026-07-10T16:31:03.441056+00:00",
+      "ended_at": "2026-07-10T16:32:19.006616+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 5 ++++-\n 1 file changed, 4 insertions(+), 1 deletion(-)\n",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 13270,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n13,270"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 3,
+            "system_time_seconds": 2.09,
+            "cpu_percent": 6,
+            "elapsed_wall_clock": "1:15.56",
+            "max_resident_set_kb": 159844,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 1,
+            "minor_page_faults": 170467,
+            "voluntary_context_switches": 33499,
+            "involuntary_context_switches": 7024,
+            "file_system_inputs": 0,
+            "file_system_outputs": 22416,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 257,
+          "chars": 255,
+          "lines": 3
+        },
+        "agent_stderr": {
+          "bytes": 11751,
+          "chars": 11745,
+          "lines": 355
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-high/runs/agent-harness-2026-07-10T163101-316963Z/logs/codex/median_bugfix",
+        "patch": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-high/runs/agent-harness-2026-07-10T163101-316963Z/logs/codex/median_bugfix/workspace.patch"
+      },
+      "variant_id": "gpt-5.6-sol-high",
+      "reasoning_effort": "high"
+    },
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.6-sol",
+      "reasoning": "xhigh",
+      "duration_seconds": 69.668,
+      "started_at": "2026-07-10T16:32:21.178381+00:00",
+      "ended_at": "2026-07-10T16:33:30.846536+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 6 ++++--\n 1 file changed, 4 insertions(+), 2 deletions(-)\n",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 16528,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n16,528"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 3.68,
+            "system_time_seconds": 2.5,
+            "cpu_percent": 8,
+            "elapsed_wall_clock": "1:09.66",
+            "max_resident_set_kb": 159124,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 9,
+            "minor_page_faults": 209493,
+            "voluntary_context_switches": 42057,
+            "involuntary_context_switches": 8287,
+            "file_system_inputs": 0,
+            "file_system_outputs": 24944,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 239,
+          "chars": 237,
+          "lines": 3
+        },
+        "agent_stderr": {
+          "bytes": 15860,
+          "chars": 15850,
+          "lines": 485
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-xhigh/runs/agent-harness-2026-07-10T163219-091491Z/logs/codex/median_bugfix",
+        "patch": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-xhigh/runs/agent-harness-2026-07-10T163219-091491Z/logs/codex/median_bugfix/workspace.patch"
+      },
+      "variant_id": "gpt-5.6-sol-xhigh",
+      "reasoning_effort": "xhigh"
+    },
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.6-sol",
+      "reasoning": "max",
+      "duration_seconds": 77.425,
+      "started_at": "2026-07-10T16:33:33.150534+00:00",
+      "ended_at": "2026-07-10T16:34:50.575034+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 5 ++++-\n 1 file changed, 4 insertions(+), 1 deletion(-)\n",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 24526,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n24,526"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 3.82,
+            "system_time_seconds": 2.41,
+            "cpu_percent": 8,
+            "elapsed_wall_clock": "1:17.42",
+            "max_resident_set_kb": 159496,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 3,
+            "minor_page_faults": 206058,
+            "voluntary_context_switches": 38039,
+            "involuntary_context_switches": 7424,
+            "file_system_inputs": 0,
+            "file_system_outputs": 24808,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 213,
+          "chars": 213,
+          "lines": 3
+        },
+        "agent_stderr": {
+          "bytes": 14958,
+          "chars": 14952,
+          "lines": 448
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-max/runs/agent-harness-2026-07-10T163330-942436Z/logs/codex/median_bugfix",
+        "patch": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-max/runs/agent-harness-2026-07-10T163330-942436Z/logs/codex/median_bugfix/workspace.patch"
+      },
+      "variant_id": "gpt-5.6-sol-max",
+      "reasoning_effort": "max"
+    },
+    {
+      "harness": "codex",
+      "harness_display_name": "Codex CLI",
+      "task": "median_bugfix",
+      "task_display_name": "Median bugfix",
+      "status": "passed",
+      "test_status": "passed",
+      "model": "gpt-5.6-sol",
+      "reasoning": "ultra",
+      "duration_seconds": 55.826,
+      "started_at": "2026-07-10T16:34:52.815555+00:00",
+      "ended_at": "2026-07-10T16:35:48.641831+00:00",
+      "agent_returncode": 0,
+      "agent_timed_out": false,
+      "test_returncode": 0,
+      "changed_files": [
+        "calcstats/stats.py"
+      ],
+      "changed_file_count": 1,
+      "diff_stat": " calcstats/stats.py | 5 ++++-\n 1 file changed, 4 insertions(+), 1 deletion(-)\n",
+      "usage": {
+        "source": "codex_cli_log",
+        "total_tokens": 14213,
+        "input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "cached_input_tokens": null,
+        "cost_usd": null,
+        "raw": "tokens used\n14,213"
+      },
+      "context": {
+        "source": "not_reported",
+        "context_window_tokens": null,
+        "context_used_tokens": null,
+        "remaining_context_tokens": null
+      },
+      "resource_usage": {
+        "agent": {
+          "source": "gnu_time_v",
+          "metrics": {
+            "user_time_seconds": 3.42,
+            "system_time_seconds": 2.21,
+            "cpu_percent": 10,
+            "elapsed_wall_clock": "0:55.82",
+            "max_resident_set_kb": 159916,
+            "avg_resident_set_kb": 0,
+            "major_page_faults": 2,
+            "minor_page_faults": 196446,
+            "voluntary_context_switches": 35767,
+            "involuntary_context_switches": 6850,
+            "file_system_inputs": 0,
+            "file_system_outputs": 24080,
+            "socket_messages_sent": 0,
+            "socket_messages_received": 0,
+            "signals_delivered": 0,
+            "page_size_bytes": 4096,
+            "exit_status": 0
+          }
+        }
+      },
+      "output_metrics": {
+        "agent_stdout": {
+          "bytes": 211,
+          "chars": 211,
+          "lines": 3
+        },
+        "agent_stderr": {
+          "bytes": 13305,
+          "chars": 13299,
+          "lines": 411
+        },
+        "test_stdout": {
+          "bytes": 0,
+          "chars": 0,
+          "lines": 0
+        },
+        "test_stderr": {
+          "bytes": 102,
+          "chars": 102,
+          "lines": 5
+        }
+      },
+      "quality_signals": {
+        "expected_files": [
+          "calcstats/stats.py"
+        ],
+        "expected_files_modified": [
+          "calcstats/stats.py"
+        ],
+        "missing_expected_files": [],
+        "unexpected_changed_files": [],
+        "changed_file_count": 1,
+        "agent_exited_cleanly": true,
+        "tests_passed": true,
+        "agent_timed_out": false,
+        "test_timed_out": false
+      },
+      "artifact_paths": {
+        "log_dir": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-ultra/runs/agent-harness-2026-07-10T163450-684376Z/logs/codex/median_bugfix",
+        "patch": "artifacts/reasoning_sweep/runs/reasoning-sweep-2026-07-10T162945-599873Z/variants/gpt-5.6-sol-ultra/runs/agent-harness-2026-07-10T163450-684376Z/logs/codex/median_bugfix/workspace.patch"
+      },
+      "variant_id": "gpt-5.6-sol-ultra",
+      "reasoning_effort": "ultra"
+    }
+  ],
+  "limitations": [
+    "This is a partial Sol-only sweep; the remaining Terra/Luna variants were not completed.",
+    "This feed measures Codex reasoning effort, not sampling temperature.",
+    "Reported token usage is the total emitted by Codex CLI; prompt/completion/reasoning splits are not available here.",
+    "One deterministic fixture task is useful for an effort curve but is not a broad intelligence benchmark."
+  ]
+}

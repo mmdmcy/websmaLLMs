@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 import { useAgentHarnessData } from "./hooks/useAgentHarnessData";
 import { useEvaluationData } from "./hooks/useEvaluationData";
+import { useReasoningEffortData } from "./hooks/useReasoningEffortData";
 import type { AgentHarnessFinding, AgentHarnessResult, AgentHarnessSummary } from "./types/agentHarness";
+import type { ReasoningEffortResult, ReasoningEffortSummary } from "./types/reasoningEfforts";
 import type {
   BenchmarkSession,
   EvaluationRecord,
@@ -92,6 +94,13 @@ function App() {
     error: agentHarnessError,
     reloadSynced: reloadAgentHarness,
   } = useAgentHarnessData();
+  const {
+    summary: reasoningEfforts,
+    source: reasoningEffortSource,
+    isLoading: isReasoningEffortLoading,
+    error: reasoningEffortError,
+    reloadSynced: reloadReasoningEfforts,
+  } = useReasoningEffortData();
   const [selectedModel, setSelectedModel] = useState("all");
   const [selectedBenchmark, setSelectedBenchmark] = useState("all");
   const [correctnessFilter, setCorrectnessFilter] = useState("all");
@@ -273,6 +282,14 @@ function App() {
         onReload={reloadAgentHarness}
         sourceLabel={agentHarnessSource?.label ?? "/data/agent-harness/latest.json"}
         summary={agentHarness}
+      />
+
+      <ReasoningEffortPanel
+        error={reasoningEffortError}
+        isLoading={isReasoningEffortLoading}
+        onReload={reloadReasoningEfforts}
+        sourceLabel={reasoningEffortSource?.label ?? "/data/reasoning-efforts/latest.json"}
+        summary={reasoningEfforts}
       />
 
       {session ? (
@@ -531,6 +548,192 @@ function AgentHarnessFindings({ findings }: { findings: AgentHarnessFinding[] })
           <p>{finding.summary}</p>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ReasoningEffortPanel({
+  error,
+  isLoading,
+  onReload,
+  sourceLabel,
+  summary,
+}: {
+  error: string | null;
+  isLoading: boolean;
+  onReload: () => Promise<void>;
+  sourceLabel: string;
+  summary: ReasoningEffortSummary | null;
+}) {
+  if (!summary && isLoading) {
+    return (
+      <section className="panel">
+        <div className="panel-heading">
+          <RefreshCw className="spin" size={18} />
+          <h2>Loading reasoning-effort sweep</h2>
+        </div>
+      </section>
+    );
+  }
+
+  if (!summary) {
+    return (
+      <section className="panel panel--warning">
+        <div className="panel-heading panel-heading--space">
+          <div className="panel-heading__title">
+            <AlertTriangle size={18} />
+            <h2>Reasoning-effort sweep unavailable</h2>
+          </div>
+          <button className="terminal-button" onClick={() => void onReload()} type="button">
+            <RefreshCw size={16} />
+            Reload
+          </button>
+        </div>
+        <p>{error ?? `No reasoning-effort export was found at ${sourceLabel}.`}</p>
+      </section>
+    );
+  }
+
+  const totals = summary.totals ?? {};
+  const effortOrder = ["low", "medium", "high", "xhigh", "max", "ultra"];
+  const variants = [...summary.variants].sort((left, right) => {
+    const modelCompare = left.model.localeCompare(right.model);
+    return modelCompare || effortOrder.indexOf(left.reasoning_effort) - effortOrder.indexOf(right.reasoning_effort);
+  });
+  const rows = [...summary.results].sort((left, right) => {
+    const variantCompare = left.variant_id.localeCompare(right.variant_id);
+    return variantCompare || left.task.localeCompare(right.task);
+  });
+
+  return (
+    <section className="panel">
+      <div className="panel-heading panel-heading--space">
+        <div className="panel-heading__title">
+          <Gauge size={18} />
+          <h2>Codex reasoning-effort sweep</h2>
+        </div>
+        <div className="panel-heading__meta">
+          <span>{summary.run_id}</span>
+          <span>{summary.status ?? "complete"}</span>
+          <span>{sourceLabel}</span>
+        </div>
+      </div>
+
+      <div className="stats-grid agent-harness-stats">
+        <StatCard icon={<Layers3 size={18} />} label="Variants" value={formatMaybeNumber(totals.variants)} />
+        <StatCard icon={<Activity size={18} />} label="Rows" value={formatMaybeNumber(totals.rows)} />
+        <StatCard icon={<Zap size={18} />} label="Passed" value={formatMaybeNumber(totals.passed)} />
+        <StatCard icon={<AlertTriangle size={18} />} label="Failed" value={formatMaybeNumber(totals.failed)} />
+        <StatCard icon={<Clock3 size={18} />} label="Total time" value={formatDuration(totals.duration_seconds_total)} />
+        <StatCard icon={<FileJson size={18} />} label="Reported tokens" value={formatMaybeNumber(totals.reported_total_tokens)} />
+        <StatCard icon={<Cpu size={18} />} label="Temperature" value="not set" />
+        <StatCard icon={<Cpu size={18} />} label="Exported" value={formatDate(summary.exported_at)} />
+      </div>
+
+      <p className="panel-copy">
+        This is the third separate feed: Codex model/effort variants. Codex CLI exposes reasoning effort here, not sampling
+        temperature; the export records that distinction explicitly.
+      </p>
+
+      {summary.findings?.length ? <AgentHarnessFindings findings={summary.findings} /> : null}
+
+      <div className="table-wrap agent-harness-table">
+        <table className="terminal-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Effort</th>
+              <th>Pass rate</th>
+              <th>Avg time</th>
+              <th>Tokens</th>
+              <th>Unexpected changes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {variants.map((variant) => (
+              <tr key={variant.variant_id}>
+                <td>
+                  <div className="table-main">{variant.model_display_name ?? variant.model}</div>
+                  <div className="table-sub">{variant.model}</div>
+                </td>
+                <td>{variant.reasoning_effort}</td>
+                <td>{formatNullablePercent(variant.pass_rate)}</td>
+                <td>{formatMaybeDuration(variant.avg_duration_seconds)}</td>
+                <td>{formatMaybeNumber(variant.reported_total_tokens)}</td>
+                <td>{formatMaybeNumber(variant.unexpected_change_rows)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="details-list agent-harness-details">
+        <LazyDetails
+          summary={
+            <div>
+              <div className="summary-title">Task-level effort rows</div>
+              <div className="summary-subtitle">{formatNumber(rows.length)} rows with timing, usage, and file-scope signals.</div>
+            </div>
+          }
+          renderContent={() => <ReasoningEffortRows rows={rows} />}
+        />
+        {summary.limitations?.length ? (
+          <LazyDetails
+            summary={
+              <div>
+                <div className="summary-title">Measurement limitations</div>
+                <div className="summary-subtitle">How to interpret the effort sweep.</div>
+              </div>
+            }
+            renderContent={() => (
+              <div className="metadata-pairs">
+                {summary.limitations?.map((limitation, index) => (
+                  <div className="metadata-pair" key={limitation}>
+                    <span>limitation {index + 1}</span>
+                    <pre>{limitation}</pre>
+                  </div>
+                ))}
+              </div>
+            )}
+          />
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function ReasoningEffortRows({ rows }: { rows: ReasoningEffortResult[] }) {
+  return (
+    <div className="table-wrap">
+      <table className="terminal-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Effort</th>
+            <th>Task</th>
+            <th>Status</th>
+            <th>Seconds</th>
+            <th>Tokens</th>
+            <th>Changed files</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const statusClass = row.status === "passed" ? "status-ok" : row.status === "dry_run" ? "status-warn" : "status-bad";
+            return (
+              <tr key={`${row.variant_id}-${row.task}`}>
+                <td>{row.model}</td>
+                <td>{row.reasoning_effort}</td>
+                <td>{row.task_display_name ?? row.task}</td>
+                <td className={statusClass}>{row.status}</td>
+                <td>{formatMaybeDuration(row.duration_seconds)}</td>
+                <td>{formatMaybeNumber(row.usage?.total_tokens)}</td>
+                <td>{row.changed_files?.join(", ") || "-"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
