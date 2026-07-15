@@ -1,12 +1,13 @@
-# llms.txt — AI/LLM crawler profile for smallms.com
-# Key routes and pointers to assist discovery.
+# smaLLMs public benchmark dashboard
 
-Site: https://smallms.com/
-Docs: https://smallms.com/
-Sitemap: https://smallms.com/sitemap_index.xml
+> Public reports and visualizations for reproducible small-language-model benchmark runs.
 
-# Public content highlights
-Route: /
-Description: Home — Small LLM benchmarking results and visualizations.
+Public pages may be used for search, real-time AI answers, model training, summarization, and full reuse. Authentication and user-specific routes remain excluded.
 
-# Robots: Allowed for AI bots (see robots.txt)
+## Resources
+
+- [Benchmark dashboard](https://smallms.com/)
+- [Full public context](https://smallms.com/llms-full.txt)
+- [Sitemap](https://smallms.com/sitemap.xml)
+- [Robots and content signals](https://smallms.com/robots.txt)
+- [Security contact](https://smallms.com/.well-known/security.txt)

@@ -1,6 +1,7 @@
 /*
   X-Robots-Tag: index, follow
-  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'; object-src 'none'; base-uri 'self';
   Permissions-Policy: camera=(), geolocation=(), microphone=()
   Referrer-Policy: strict-origin-when-cross-origin
@@ -31,4 +32,7 @@
   Content-Type: application/xml; charset=utf-8
 
 /llms.txt
+  Content-Type: text/plain; charset=utf-8
+
+/llms-full.txt
   Content-Type: text/plain; charset=utf-8

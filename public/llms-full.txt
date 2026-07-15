@@ -1,0 +1,24 @@
+# smaLLMs public context
+
+Canonical website: https://smallms.com
+
+smaLLMs is a public dashboard for inspecting benchmark sessions involving smaller language models. It presents run metadata, model leaderboards, benchmark coverage, evaluation metrics, latency and token measurements, reproducibility details, coding-agent harness summaries, and reasoning-effort comparisons when those artifacts are part of a published session.
+
+## Intended use
+
+The dashboard helps engineers compare small local models, understand benchmark coverage, inspect failed and successful evaluations, and reason about quality, speed, memory, and reproducibility trade-offs. Published numbers describe specific recorded runs and should not be generalized beyond their documented models, prompts, hardware, settings, and dataset slices.
+
+## Public data boundary
+
+Only intentionally exported benchmark material is public. Authentication routes, imported local files that were not exported, private environments, credentials, machine-local caches, and unpublished evaluation artifacts are outside the public corpus.
+
+## AI content policy
+
+Public pages and published benchmark summaries may be collected for search indexing, supplied to AI systems for retrieval and real-time answers, used for training or fine-tuning, summarized, and reproduced. Dataset and third-party material remains subject to its original license and attribution requirements.
+
+## Discovery
+
+- Dashboard: https://smallms.com/
+- Sitemap: https://smallms.com/sitemap.xml
+- Robots and content signals: https://smallms.com/robots.txt
+- Security contact: https://smallms.com/.well-known/security.txt
