@@ -50,8 +50,31 @@ The session bundle is intentionally dense. The site reads and displays:
 
 ## Stack
 
-- React 18 + TypeScript
-- Vite
-- Recharts for charts
-- Lucide React for icons
-- CSS-first terminal styling with a static JSON data source
+Plain HTML, CSS and JavaScript (native ES modules), with no dependencies, no npm packages and no build tool.
+The whole site is the `public/` folder:
+
+- `public/index.html`: the page, its SEO meta and the static header
+- `public/css/style.css`: all styles
+- `public/js/`: `main.js` (state, loading, controls), `data.js` (loading and checking the three JSON feeds),
+  `feeds.js` (agent harness and reasoning-effort panels), `session.js` (summary, charts, leaderboard, matrix,
+  environment, archive), `explorers.js` (evaluation and sample explorers), `charts.js` (the two SVG charts),
+  `parts.js` (shared blocks), `format.js` (formatting), `html.js` (HTML building that escapes every value),
+  `icons.js` (inline Lucide icons, ISC licence)
+- `public/fonts/`: IBM Plex Mono, served from this site (SIL Open Font License, `OFL.txt`)
+
+The Content-Security-Policy allows scripts only from this site, so the page has no inline scripts or inline event handlers.
+
+## Local preview
+
+No Node needed:
+
+```sh
+python3 -m http.server --bind 127.0.0.1 --directory public 8000
+```
+
+Then open http://127.0.0.1:8000.
+
+## Deploy
+
+Cloudflare Pages runs `npm run build`, which only copies `public/` into `dist/` (`rm`, `mkdir`, `cp`), and publishes `dist/`.
+`package.json` has no dependencies; it exists only to carry that build script.

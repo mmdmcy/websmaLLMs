@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>smaLLMs - Small Language Model Benchmarking Platform</title>
+    <meta
+      name="description"
+      content="Enterprise-grade benchmarking platform for small language models (1B–7B). Visualize performance, cost, and efficiency with clear, shareable insights."
+    />
+    <meta name="robots" content="index, follow" />
+
+  <!-- Canonical and hreflang (apex domain smallms.com; update if different) -->
+  <link rel="canonical" href="https://smallms.com" />
+  <link rel="alternate" href="https://smallms.com" hreflang="en" />
+  <link rel="alternate" href="https://smallms.com" hreflang="x-default" />
+
+    <!-- Favicon and social image -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:title" content="smaLLMs - Small Language Model Benchmarking" />
+    <meta property="og:description" content="Benchmark and compare small LLMs with cost-aware insights and rich visualizations." />
+    <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://smallms.com" />
+    <meta property="og:image" content="https://smallms.com/og-image.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="smaLLMs - Small Language Model Benchmarking" />
+    <meta name="twitter:description" content="Benchmark and compare small LLMs with cost-aware insights and rich visualizations." />
+  <meta name="twitter:image" content="https://smallms.com/og-image.svg" />
+
+    <!-- Organization + WebSite structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "smaLLMs",
+  "url": "https://smallms.com",
+        "logo": "https://smallms.com/favicon.svg"
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "smaLLMs",
+  "url": "https://smallms.com",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://smallms.com/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+
+    <link rel="preload" href="/fonts/ibm-plex-mono-400-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/css/style.css" />
+    <script type="module" src="/js/main.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="app-grid"></div>
+      <header class="terminal-window hero-shell">
+        <div class="terminal-window__title">
+          <div class="terminal-badges">
+            <span class="terminal-badge terminal-badge--red"></span>
+            <span class="terminal-badge terminal-badge--amber"></span>
+            <span class="terminal-badge terminal-badge--green"></span>
+          </div>
+          <div class="terminal-window__name">
+            <!-- Icons: Lucide (https://lucide.dev), ISC licence. -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+            <span>websmaLLMs session explorer</span>
+          </div>
+          <div class="terminal-window__meta" id="hero-meta"></div>
+        </div>
+
+        <div class="hero-copy">
+          <div class="hero-command">$ python3 smaLLMs.py run --all-local --samples 25</div>
+          <div class="hero-command">$ python3 smaLLMs.py export</div>
+          <h1>Every benchmark run, all the way down to prompt and response level.</h1>
+          <p>
+            The site now reads the exported session bundle directly. Keep using the current terminal aesthetic, but with a real
+            data contract behind it: leaderboard, benchmark coverage, evaluation metrics, raw sample traces, system metadata, and
+            artifact provenance in one scrollable surface.
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <button class="terminal-button" data-action="reload-session" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+            Reload synced session
+          </button>
+          <label class="terminal-button terminal-button--accent" for="session-import">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            Import session.json
+          </label>
+          <input accept=".json,application/json" class="sr-only" id="session-import" type="file" />
+        </div>
+
+        <div class="hero-status" id="hero-status"></div>
+      </header>
+
+      <div class="region" id="session-status"></div>
+      <div class="region" id="agent-harness"></div>
+      <div class="region" id="reasoning"></div>
+      <div class="region" id="session"></div>
+    </div>
+  </body>
+</html>
